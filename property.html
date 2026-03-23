@@ -205,20 +205,31 @@
       </div>
     </div>
 
-    <div class="detail-section" id="amenitiesSection" style="display:none">
-      <div class="detail-section-title">Amenities & Features</div>
-      <div class="amenities-grid" id="amenitiesGrid"></div>
+    <div class="detail-section detail-tabs-wrap" id="detailTabsSection" style="display:none">
+      <div class="detail-tabs" id="detailTabs" role="tablist">
+        <button class="detail-tab active" data-panel="panelAmenities" id="tabAmenities" role="tab" aria-selected="true" aria-controls="panelAmenities">
+          <i class="fas fa-list-check"></i> Amenities
+        </button>
+        <button class="detail-tab" data-panel="panelUtilities" id="tabUtilities" role="tab" aria-selected="false" aria-controls="panelUtilities" style="display:none">
+          <i class="fas fa-bolt"></i> Utilities
+        </button>
+        <button class="detail-tab" data-panel="panelLease" id="tabLease" role="tab" aria-selected="false" aria-controls="panelLease" style="display:none">
+          <i class="fas fa-file-contract"></i> Lease
+        </button>
+      </div>
+      <div class="detail-tab-panel active" id="panelAmenities" role="tabpanel" aria-labelledby="tabAmenities">
+        <div class="amenities-grid" id="amenitiesGrid"></div>
+      </div>
+      <div class="detail-tab-panel" id="panelUtilities" role="tabpanel" aria-labelledby="tabUtilities">
+        <div class="amenities-grid" id="utilitiesGrid"></div>
+      </div>
+      <div class="detail-tab-panel" id="panelLease" role="tabpanel" aria-labelledby="tabLease">
+        <div class="amenities-grid" id="leaseGrid"></div>
+      </div>
     </div>
-
-    <div class="detail-section" id="utilitiesSection" style="display:none">
-      <div class="detail-section-title">Utilities & Parking</div>
-      <div class="amenities-grid" id="utilitiesGrid"></div>
-    </div>
-
-    <div class="detail-section" id="leaseSection" style="display:none">
-      <div class="detail-section-title">Lease Information</div>
-      <div class="amenities-grid" id="leaseGrid"></div>
-    </div>
+    <div id="amenitiesSection" style="display:none"></div>
+    <div id="utilitiesSection" style="display:none"></div>
+    <div id="leaseSection" style="display:none"></div>
 
     <!-- Map section — uses Leaflet if lat/lng available, fallback iframe -->
     <div class="detail-section">
@@ -299,13 +310,19 @@
     </div>
 
     <!-- Contact Card -->
-    <div class="contact-card">
-      <div class="share-row">
-        <button class="share-btn" id="savePropBtn">
-          <i class="far fa-heart"></i> Save
-        </button>
-        <button class="share-btn" onclick="shareProp()">
-          <i class="fas fa-share-alt"></i> Share
+    <div class="contact-card" id="contactCard">
+      <div class="contact-drawer-handle-bar"></div>
+      <div class="contact-card-header-row">
+        <div class="share-row">
+          <button class="share-btn" id="savePropBtn">
+            <i class="far fa-heart"></i> Save
+          </button>
+          <button class="share-btn" onclick="shareProp()">
+            <i class="fas fa-share-alt"></i> Share
+          </button>
+        </div>
+        <button class="contact-drawer-close-btn" id="contactDrawerCloseBtn" aria-label="Close">
+          <i class="fas fa-times"></i>
         </button>
       </div>
       <div class="contact-card-title">Questions? Message the Landlord</div>
@@ -648,8 +665,10 @@ function renderProperty(p) {
     descEl.insertAdjacentElement('afterend', rmBtn);
   }
 
+  let hasAmenities = false, hasUtilities = false, hasLease = false;
+
   if (p.amenities?.length) {
-    document.getElementById('amenitiesSection').style.display = '';
+    hasAmenities = true;
     document.getElementById('amenitiesGrid').innerHTML = p.amenities.map(a =>
       `<div class="amenity-item"><i class="fas ${amenityIcon(a)} ${amenityIconColor(a)}"></i>${a}</div>`).join('');
   }
@@ -659,7 +678,7 @@ function renderProperty(p) {
     `<div class="amenity-item"><i class="fas fa-bolt icon-amber"></i>${u} Included</div>`));
   if (p.parking) utilRows.push(`<div class="amenity-item"><i class="fas fa-car"></i>Parking: ${p.parking}</div>`);
   if (utilRows.length) {
-    document.getElementById('utilitiesSection').style.display = '';
+    hasUtilities = true;
     document.getElementById('utilitiesGrid').innerHTML = utilRows.join('');
   }
 
@@ -668,8 +687,37 @@ function renderProperty(p) {
   if (p.security_deposit) leaseItems.push(`<div class="amenity-item"><i class="fas fa-shield-alt"></i>Deposit: $${p.security_deposit.toLocaleString()}</div>`);
   if (p.showing_instructions) leaseItems.push(`<div class="amenity-item" style="grid-column:1/-1"><i class="fas fa-key"></i><span><strong>Showings:</strong> ${p.showing_instructions}</span></div>`);
   if (leaseItems.length) {
-    document.getElementById('leaseSection').style.display = '';
+    hasLease = true;
     document.getElementById('leaseGrid').innerHTML = leaseItems.join('');
+  }
+
+  // Show tabbed section and configure visible tabs
+  if (hasAmenities || hasUtilities || hasLease) {
+    document.getElementById('detailTabsSection').style.display = '';
+    const tabConfig = [
+      { tabId: 'tabAmenities', panelId: 'panelAmenities', has: hasAmenities },
+      { tabId: 'tabUtilities', panelId: 'panelUtilities', has: hasUtilities },
+      { tabId: 'tabLease',     panelId: 'panelLease',     has: hasLease     },
+    ];
+    let firstActive = null;
+    tabConfig.forEach(({ tabId, panelId, has }) => {
+      const tabEl   = document.getElementById(tabId);
+      const panelEl = document.getElementById(panelId);
+      if (has) {
+        tabEl.style.display = '';
+        if (!firstActive) firstActive = { tabEl, panelEl };
+      } else {
+        tabEl.style.display = 'none';
+        panelEl.classList.remove('active');
+      }
+    });
+    if (firstActive) {
+      document.querySelectorAll('.detail-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+      document.querySelectorAll('.detail-tab-panel').forEach(pl => pl.classList.remove('active'));
+      firstActive.tabEl.classList.add('active');
+      firstActive.tabEl.setAttribute('aria-selected', 'true');
+      firstActive.panelEl.classList.add('active');
+    }
   }
 
   // Map — Leaflet if lat/lng, fallback to Google embed
@@ -1211,6 +1259,41 @@ document.getElementById('sendInquiryBtn').addEventListener('click', async () => 
   }
 });
 
+/* ── Detail Tabs ── */
+document.getElementById('detailTabs')?.addEventListener('click', e => {
+  const tab = e.target.closest('.detail-tab');
+  if (!tab || tab.classList.contains('active')) return;
+  document.querySelectorAll('.detail-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+  document.querySelectorAll('.detail-tab-panel').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  tab.setAttribute('aria-selected', 'true');
+  const panelId = tab.dataset.panel;
+  document.getElementById(panelId)?.classList.add('active');
+});
+
+/* ── Contact Drawer (mobile) ── */
+(function() {
+  const contactCard     = document.getElementById('contactCard');
+  const drawerOverlay   = document.getElementById('contactDrawerOverlay');
+  const mobMsgBtn       = document.getElementById('mobMsgBtn');
+  const drawerCloseBtn  = document.getElementById('contactDrawerCloseBtn');
+
+  function openContactDrawer() {
+    contactCard?.classList.add('drawer-open');
+    drawerOverlay?.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeContactDrawer() {
+    contactCard?.classList.remove('drawer-open');
+    drawerOverlay?.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  mobMsgBtn?.addEventListener('click', openContactDrawer);
+  drawerOverlay?.addEventListener('click', closeContactDrawer);
+  drawerCloseBtn?.addEventListener('click', closeContactDrawer);
+})();
+
 /* ── Share & Save ── */
 window.shareProp = () => {
   if (navigator.share) navigator.share({ title: currentProperty?.title, url: window.location.href });
@@ -1294,13 +1377,21 @@ function showToast(msg, type = 'info') {
 
 </script>
 
+<!-- Contact drawer overlay (mobile) -->
+<div class="contact-drawer-overlay" id="contactDrawerOverlay" aria-hidden="true"></div>
+
 <!-- Mobile-only sticky Apply bar — populated by renderProperty() -->
 <div id="mobile-apply-bar" role="complementary" aria-label="Apply for this property">
   <div class="mob-price">
     <span>Monthly Rent</span>
     <strong id="mobBarRent">—</strong>
   </div>
-  <a href="#" id="mobApplyBtn" class="mob-btn">Apply Now</a>
+  <div class="mob-actions">
+    <button class="mob-msg-btn" id="mobMsgBtn" aria-label="Message landlord">
+      <i class="fas fa-comment-dots"></i>
+    </button>
+    <a href="#" id="mobApplyBtn" class="mob-btn">Apply Now</a>
+  </div>
 </div>
 </body>
 </html>

@@ -999,3 +999,165 @@
   box-shadow: 0 4px 14px rgba(0,106,255,0.12);
 }
 .map-open-btn i { font-size: 12px; }
+
+/* ── DETAIL TABS ──────────────────────────────────────────── */
+.detail-tabs-wrap { padding: 0; }
+.detail-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--color-border-muted);
+  margin-bottom: var(--space-5);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.detail-tabs::-webkit-scrollbar { display: none; }
+.detail-tab {
+  padding: 10px 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  font-family: var(--font-base);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 160ms ease, border-color 160ms ease, background 160ms ease;
+  min-height: 44px;
+}
+.detail-tab i { font-size: 11px; }
+.detail-tab:hover { color: var(--color-text-primary); background: var(--color-surface-raised); }
+.detail-tab.active {
+  color: var(--color-brand);
+  border-bottom-color: var(--color-brand);
+}
+.detail-tab-panel { display: none; }
+.detail-tab-panel.active { display: block; }
+
+/* ── READ MORE (description truncation) ───────────────────── */
+.detail-desc.truncated {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.detail-read-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: var(--space-2);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-brand);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  font-family: var(--font-base);
+  transition: color var(--dur) var(--ease);
+}
+.detail-read-more:hover { color: var(--color-brand-hover); }
+
+/* ── CONTACT CARD — drawer chrome ────────────────────────── */
+.contact-drawer-handle-bar {
+  display: none;
+  width: 40px; height: 4px;
+  background: var(--color-border-strong);
+  border-radius: 2px;
+  margin: 0 auto var(--space-4);
+}
+.contact-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.contact-card-header-row .share-row { margin-bottom: 0; }
+.contact-drawer-close-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.contact-drawer-close-btn:hover { background: var(--color-surface-page); color: var(--color-text-primary); }
+
+/* ── CONTACT DRAWER OVERLAY ───────────────────────────────── */
+.contact-drawer-overlay {
+  position: fixed; inset: 0;
+  z-index: 290;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+.contact-drawer-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── MOBILE STICKY BAR — message button ──────────────────── */
+.mob-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.mob-msg-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 46px; height: 46px;
+  background: rgba(255,255,255,0.12);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 160ms ease;
+}
+.mob-msg-btn:hover { background: rgba(255,255,255,0.22); }
+
+/* ── CONTACT DRAWER (mobile only) ────────────────────────── */
+@media (max-width: 767px) {
+  .contact-drawer-handle-bar { display: block; }
+  .contact-drawer-close-btn  { display: flex; }
+  .mob-msg-btn               { display: flex; }
+
+  #contactCard {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 300;
+    border-radius: 20px 20px 0 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    transform: translateY(100%);
+    transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+    max-height: 88vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-top: var(--space-4);
+    padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.30);
+  }
+  #contactCard.drawer-open {
+    transform: translateY(0);
+  }
+}
