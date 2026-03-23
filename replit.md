@@ -10,6 +10,45 @@ These rules are absolute. They apply to every session, every import, every task.
 - A **static website** deployed to **Cloudflare Pages**
 - Connected to **Supabase cloud** for all backend needs
 - Using Replit **as a code editor only** — nothing more
+- **MOBILE-FIRST** — see the mandatory mobile rule below
+
+---
+
+## 📱 MOBILE-FIRST — MANDATORY DESIGN RULE FOR ALL AI AGENTS
+
+**This project is mobile-first. No exceptions. This rule applies to every single change, on every single page, in every single session.**
+
+### What mobile-first means here:
+
+- **Design for the smallest screen first** (320px–390px width), then scale up to tablet and desktop
+- **Every new page, section, component, or UI element must work perfectly on mobile before anything else**
+- **Touch targets** (buttons, links, inputs) must be at least **44×44px** — never smaller
+- **Font sizes** must be readable on mobile — body text minimum `16px`, never smaller
+- **Navigation** must be thumb-friendly — hamburger menus, bottom bars, or large tap areas
+- **Forms** must be easy to fill on a phone — full-width inputs, large labels, proper `type` attributes (tel, email, number) to trigger the right mobile keyboard
+- **Images and media** must be responsive — use `max-width: 100%`, never fixed widths that overflow
+- **No horizontal scrolling** — content must never overflow the viewport width on mobile
+- **Spacing and padding** must be generous on mobile — cramped layouts are not acceptable
+- **Tables** that won't fit on mobile must be replaced with cards, stacked rows, or scrollable containers
+- **Modals and overlays** must be full-screen or near-full-screen on mobile, not tiny popups
+- **CSS must use mobile-first media queries** — write base styles for mobile, then use `@media (min-width: ...)` to enhance for larger screens, never `max-width` as the primary breakpoint strategy
+
+### When writing or editing any HTML/CSS/JS:
+
+1. Always ask: *"Does this look right on a 390px wide phone screen?"*
+2. Always test responsive behavior — if in doubt, default to the mobile layout
+3. Never add a feature for desktop that breaks or is unusable on mobile
+4. Never use fixed pixel widths on containers that could overflow on small screens
+5. The existing `css/mobile.css` file is auto-injected into every page — use it for mobile overrides
+
+### Priority order (highest to lowest):
+1. Mobile (320px – 767px) ← **always first**
+2. Tablet (768px – 1023px)
+3. Desktop (1024px+)
+
+**If a feature works on desktop but is broken or unusable on mobile, it is considered broken. Fix mobile first.**
+
+---
 
 ### NEVER do any of the following:
 
