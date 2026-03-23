@@ -1,0 +1,39 @@
+# ============================================================
+# Choice Properties — .gitignore
+# ============================================================
+
+# ------------------------------------------------------------
+# CRITICAL: config.js holds your real credentials.
+# NEVER commit the real config.js — only config.example.js
+# is tracked. Fill in config.js locally or at deploy time.
+# ------------------------------------------------------------
+config.js
+
+# Supabase local dev artifacts
+.supabase/
+supabase/.temp/
+
+# Node (if you ever run anything locally)
+node_modules/
+.env
+.env.local
+.env.production
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Replit-internal (not needed in GitHub)
+.agents/
+.local/
+.cache/
+attached_assets/

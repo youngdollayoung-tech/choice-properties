@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Page Not Found — Choice Properties</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/main.css?v=3">
+  <link rel="stylesheet" href="/css/mobile.css?v=4">
+  <style>
+    .info-hero { background: var(--color-ink); padding: var(--space-16) 0 var(--space-12); margin-bottom: var(--space-12); position: relative; overflow: hidden; }
+    .info-hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 60% at 70% 50%, rgba(212,160,23,0.10) 0%, transparent 60%); }
+    .info-hero::after { content:''; position:absolute; bottom:0; left:0; right:0; height:1px; background:linear-gradient(to right, transparent 5%, rgba(212,160,23,0.3) 30%, rgba(212,160,23,0.3) 70%, transparent 95%); }
+    .info-hero-inner { position:relative; z-index:1; max-width:720px; }
+    .info-hero-title { font-family:var(--font-base); font-size:clamp(32px,5vw,52px); font-weight:700; color:var(--color-surface-raised); line-height:1.1; margin-bottom:var(--space-3); letter-spacing:-0.02em; }
+    .info-hero-sub { font-size:17px; color:rgba(255,255,255,0.52); line-height:1.65; }
+    .info-page { padding: var(--space-16) 0 var(--space-24); }
+    .info-content { max-width: 760px; }
+    .info-section { margin-bottom: var(--space-10); }
+    .info-section h2 { font-family:var(--font-base); font-size:26px; font-weight:700; color:var(--color-ink); margin-bottom:var(--space-4); padding-bottom:var(--space-3); border-bottom:1.5px solid var(--color-surface-subtle); letter-spacing:-0.01em; }
+    .info-section p { font-size:15.5px; color:var(--slate-mid); line-height:1.8; margin-bottom:var(--space-4); }
+    .info-section ul { padding-left:var(--space-5); display:flex; flex-direction:column; gap:var(--space-2); }
+    .info-section ul li { font-size:15.5px; color:var(--slate-mid); line-height:1.7; }
+    .info-section a { color:var(--color-brand-light); }
+  </style>
+  <style>
+    .not-found-wrap { min-height: calc(100vh - var(--nav-h) - 300px); display:flex; align-items:center; justify-content:center; padding:var(--space-16) var(--space-6); text-align:center; }
+    .not-found-num { font-family:var(--font-base); font-size:clamp(80px,15vw,160px); font-weight:900; color:var(--color-surface-subtle); line-height:1; letter-spacing:-0.04em; margin-bottom:var(--space-4); }
+    .not-found-title { font-family:var(--font-base); font-size:clamp(24px,4vw,36px); font-weight:700; color:var(--color-ink); margin-bottom:var(--space-3); }
+    .not-found-sub { font-size:16px; color:var(--slate-mid); margin-bottom:var(--space-8); max-width:400px; }
+    .not-found-links { display:flex; gap:var(--space-3); justify-content:center; flex-wrap:wrap; }
+  </style>
+</head>
+<body>
+<div class="nav-drawer-overlay" id="drawerOverlay"></div>
+<nav class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer-header">
+    <a href="/index.html" class="nav-logo">
+      <div class="nav-logo-emblem">
+        <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="white" opacity="0.9"/><circle cx="12" cy="11" r="2.5" fill="rgba(0,106,255,0.8)"/></svg>
+      </div>
+      <div><div class="nav-logo-text">Choice Properties</div><div class="nav-logo-sub">Rental Marketplace</div></div>
+    </a>
+    <button class="nav-drawer-close" id="drawerClose"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="nav-drawer-body">
+    <a href="/listings.html" class="nav-drawer-link"><i class="fas fa-home"></i> Browse Listings</a>
+    <a href="/how-it-works.html" class="nav-drawer-link"><i class="fas fa-info-circle"></i> How It Works</a>
+    <a href="/about.html" class="nav-drawer-link"><i class="fas fa-building"></i> About Us</a>
+    <a href="/landlord/register.html" class="nav-drawer-link"><i class="fas fa-plus-circle"></i> List a Property</a>
+    <a href="/how-to-apply.html" class="nav-drawer-link"><i class="fas fa-question-circle"></i> How to Apply</a>
+    <a href="/faq.html" class="nav-drawer-link"><i class="fas fa-info-circle"></i> FAQ</a>
+    <a href="/apply/dashboard.html" target="_blank" class="nav-drawer-link"><i class="fas fa-file-alt"></i> Track My Application</a>
+  </div>
+  <div class="nav-drawer-cta">
+    <a href="/landlord/login.html" class="btn btn-primary btn-full" id="drawerAuthLink">Landlord Login</a>
+  </div>
+  <div class="nav-drawer-footer"><a id="drawerFooterEmail" href="mailto:support@choiceproperties.com">support@choiceproperties.com</a></div>
+</nav>
+<nav class="nav" id="mainNav">
+  <div class="nav-inner">
+    <a href="/index.html" class="nav-logo">
+      <div class="nav-logo-emblem">
+        <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="white" opacity="0.9"/><circle cx="12" cy="11" r="2.5" fill="rgba(0,106,255,0.8)"/></svg>
+      </div>
+      <div><div class="nav-logo-text">Choice Properties</div><div class="nav-logo-sub">Rental Marketplace</div></div>
+    </a>
+    <div class="nav-links">
+      <a href="/listings.html" class="nav-link">Browse Listings</a>
+      <a href="/how-it-works.html" class="nav-link">How It Works</a>
+      <a href="/about.html" class="nav-link">About</a>
+      <a href="/apply/dashboard.html" target="_blank" class="nav-link nav-link--track"><i class="fas fa-file-alt"></i> Track Application</a>
+      <a href="/landlord/login.html" class="nav-link nav-link--cta" id="navAuthLink">Landlord Login</a>
+    </div>
+    <button class="nav-mobile-toggle" id="mobileToggle"><i class="fas fa-bars"></i></button>
+  </div>
+</nav>
+<div class="not-found-wrap">
+  <div>
+    <div class="not-found-num">404</div>
+    <h1 class="not-found-title">Page Not Found</h1>
+    <p class="not-found-sub">The page you're looking for doesn't exist or has been moved. Let's get you back on track.</p>
+    <div class="not-found-links">
+      <a href="/index.html" class="btn btn-primary btn-lg"><i class="fas fa-home"></i> Browse Listings</a>
+      <a href="/faq.html" class="btn btn-ghost btn-lg">Help & FAQ</a>
+    </div>
+    <p style="margin-top:var(--s-8);font-size:13px;color:var(--slate-light)">
+      Need help? <a href="mailto:support@choiceproperties.com" style="color:var(--gold);font-weight:600" data-cfg-email>support@choiceproperties.com</a>
+    </p>
+  </div>
+</div>
+<footer class="footer"><div class="footer-glow"></div><div class="container">
+  <div class="footer-grid">
+    <div><div class="footer-brand-name">Choice Properties</div><p class="footer-brand-desc">America's trusted rental marketplace since 2024.</p>
+      <a href="mailto:support@choiceproperties.com" class="footer-contact-item" data-cfg-email><i class="fas fa-envelope"></i> support@choiceproperties.com</a>
+      <a href="mailto:support@choiceproperties.com" class="footer-contact-item" data-cfg-email><i class="fas fa-envelope"></i> support@choiceproperties.com</a>
+    </div>
+    <div><div class="footer-heading">Renters</div><ul class="footer-links"><li><a href="/listings.html">Browse Listings</a></li><li><a href="/how-to-apply.html">How to Apply</a></li><li><a href="/faq.html">FAQ</a></li></ul></div>
+    <div><div class="footer-heading">Landlords</div><ul class="footer-links"><li><a href="/landlord/register.html">List a Property</a></li><li><a href="/landlord/login.html">Landlord Login</a></li></ul></div>
+    <div><div class="footer-heading">Company</div><ul class="footer-links"><li><a href="/about.html">About Us</a></li><li><a href="/privacy.html">Privacy</a></li><li><a href="/terms.html">Terms</a></li></ul></div>
+  </div>
+  <div class="footer-bottom"><span>© 2026 Choice Properties. All rights reserved.</span><div class="footer-bottom-links"><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a></div></div>
+</div></footer>
+<script>
+  const nav = document.getElementById('mainNav');
+  if (nav) window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 20));
+  const toggle = document.getElementById('mobileToggle'), drawer = document.getElementById('navDrawer'), overlay = document.getElementById('drawerOverlay'), closeBtn = document.getElementById('drawerClose');
+  function openDrawer() { drawer.classList.add('open'); overlay.classList.add('visible'); setTimeout(()=>overlay.classList.add('open'),10); }
+  function closeDrawer() { drawer.classList.remove('open'); overlay.classList.remove('open'); setTimeout(()=>overlay.classList.remove('visible'),360); }
+  if (toggle) toggle.addEventListener('click', openDrawer);
+  if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+  if (overlay) overlay.addEventListener('click', closeDrawer);
+</script>
+<script src="/config.js"></script>
+<script>
+(function(){
+  function initContacts(){
+    if(!window.CONFIG) return;
+    document.querySelectorAll('[data-cfg-email]').forEach(function(el){
+      el.href = 'mailto:' + CONFIG.COMPANY_EMAIL;
+      el.textContent = CONFIG.COMPANY_EMAIL;
+    });
+    document.querySelectorAll('[data-cfg-phone]').forEach(function(el){
+      el.href = 'tel:' + CONFIG.COMPANY_PHONE.replace(/\D/g,'');
+      el.textContent = CONFIG.COMPANY_PHONE;
+    });
+    var df = document.getElementById('drawerFooterEmail');
+    if(df){ df.href = 'mailto:' + CONFIG.COMPANY_EMAIL; df.textContent = CONFIG.COMPANY_EMAIL; }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initContacts);
+  else initContacts();
+})();
+</script>
+</body>
+</html>

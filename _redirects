@@ -1,0 +1,3 @@
+# _redirects — supported by Cloudflare Pages and Netlify
+# Catch-all 404 — must be last
+/*    /404.html   404

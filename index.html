@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choice Properties — Find Your Next Home Nationwide</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <meta name="description" content="Browse verified rental listings across the United States. Apartments, houses, and condos — apply online in minutes.">
+  <meta property="og:title" content="Choice Properties — Find Your Next Home Nationwide">
+  <meta property="og:description" content="Browse verified rental listings across the United States. Apartments, houses, and condos — apply online in minutes.">
+  <meta property="og:image" content="/assets/og-cover.jpg">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://choiceproperties.com/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Choice Properties — Find Your Next Home Nationwide">
+  <meta name="twitter:description" content="Browse verified rental listings across the United States. Apply online in minutes.">
+  <meta name="twitter:image" content="/assets/og-cover.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/css/main.css?v=3">
+  <link rel="stylesheet" href="/css/listings.css?v=6">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/mobile.css?v=4">
+<script src="/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script type="module" src="/js/cp-api.js"></script>
+</head>
+<body>
+
+<!-- ── Mobile Drawer Overlay ── -->
+<div class="nav-drawer-overlay" id="drawerOverlay"></div>
+
+<!-- ── Mobile Drawer ── -->
+<nav class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer-header">
+    <a href="/index.html" class="nav-logo">
+      <div class="nav-logo-emblem">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="white" opacity="0.9"/>
+          <circle cx="12" cy="11" r="2.5" fill="rgba(0,106,255,0.8)"/>
+        </svg>
+      </div>
+      <div class="nav-logo-text-wrap">
+        <div class="nav-logo-name">Choice Properties</div>
+        <div class="nav-logo-tagline">Rental Marketplace</div>
+      </div>
+    </a>
+    <button class="nav-drawer-close" id="drawerClose" aria-label="Close menu">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  <div class="nav-drawer-body">
+    <a href="/listings.html" class="nav-drawer-link"><i class="fas fa-home"></i> Browse Listings</a>
+    <a href="/how-to-apply.html" class="nav-drawer-link"><i class="fas fa-question-circle"></i> How to Apply</a>
+    <a href="/faq.html" class="nav-drawer-link"><i class="fas fa-life-ring"></i> FAQ</a>
+    <a href="/apply/dashboard.html" target="_blank" rel="noopener noreferrer" class="nav-drawer-link"><i class="fas fa-file-alt"></i> Track My Application</a>
+    <div class="nav-drawer-divider"></div>
+    <a href="/how-it-works.html" class="nav-drawer-link" id="drawerListPropertyLink"><i class="fas fa-building"></i> For Landlords</a>
+    <a href="/about.html" class="nav-drawer-link"><i class="fas fa-info-circle"></i> About Us</a>
+  </div>
+  <div class="nav-drawer-cta">
+    <a href="#" class="btn btn-primary btn-full" id="drawerAuthLink">Landlord Login</a>
+  </div>
+  <div class="nav-drawer-footer"><a id="drawerFooterEmail" href="mailto:support@choiceproperties.com">support@choiceproperties.com</a></div>
+</nav>
+
+<!-- ── Main Navigation ── -->
+<nav class="nav" id="mainNav">
+  <div class="nav-inner">
+    <a href="/index.html" class="nav-logo">
+      <div class="nav-logo-emblem">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="white" opacity="0.9"/>
+          <circle cx="12" cy="11" r="2.5" fill="rgba(0,106,255,0.8)"/>
+        </svg>
+      </div>
+      <div class="nav-logo-text-wrap">
+        <div class="nav-logo-name">Choice Properties</div>
+        <div class="nav-logo-tagline">Rental Marketplace</div>
+      </div>
+    </a>
+
+    <div class="nav-links">
+      <a href="/listings.html" class="nav-link">Browse Listings</a>
+      <a href="/how-to-apply.html" class="nav-link">How to Apply</a>
+      <a href="/faq.html" class="nav-link">FAQ</a>
+      <a href="/apply/dashboard.html" target="_blank" rel="noopener noreferrer" class="nav-link nav-link--track">
+        <i class="fas fa-file-alt" style="font-size:11px"></i> Track Application
+      </a>
+      <a href="#" class="nav-link nav-link--landlord" id="navAuthLink">For Landlords</a>
+    </div>
+
+    <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Open menu">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="hero-atmosphere"></div>
+  <div class="hero-grain"></div>
+  <div class="hero-rule"></div>
+  <div class="hero-vertical-rule"></div>
+
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-content">
+        <div class="hero-eyebrow">
+          <span class="hero-eyebrow-pulse"></span>
+          Nationwide Rental Marketplace
+        </div>
+
+        <h1 class="hero-headline">
+          Find a Home<br>You'll <em>Truly</em> Love
+        </h1>
+
+        <p class="hero-sub">
+          Verified listings, transparent pricing, no hidden fees.
+          Browse quality homes across all 50 states and apply in 15 minutes.
+        </p>
+
+        <!-- Search Bar — submits to /listings.html -->
+        <div class="search-bar">
+          <div class="search-bar-top">
+            <div class="search-field">
+              <i class="fas fa-search"></i>
+              <input type="text" id="searchInput"
+                placeholder="City, zip code, or neighborhood…"
+                autocomplete="off" aria-label="Search listings">
+            </div>
+            <div class="search-field">
+              <i class="fas fa-bed"></i>
+              <select id="bedroomsFilter" aria-label="Bedrooms">
+                <option value="">Any beds</option>
+                <option value="0">Studio</option>
+                <option value="1">1 Bed</option>
+                <option value="2">2 Beds</option>
+                <option value="3">3 Beds</option>
+                <option value="4">4+ Beds</option>
+              </select>
+            </div>
+            <div class="search-field">
+              <i class="fas fa-dollar-sign"></i>
+              <select id="maxRentFilter" aria-label="Max rent">
+                <option value="">Any price</option>
+                <option value="700">Up to $700</option>
+                <option value="900">Up to $900</option>
+                <option value="1100">Up to $1,100</option>
+                <option value="1400">Up to $1,400</option>
+                <option value="1700">Up to $1,700</option>
+                <option value="2200">Up to $2,200</option>
+                <option value="2500">Up to $2,500</option>
+                <option value="3000">Up to $3,000</option>
+                <option value="3500">Up to $3,500</option>
+                <option value="4000">Up to $4,000</option>
+                <option value="5000">Up to $5,000</option>
+              </select>
+            </div>
+            <button class="search-btn" id="searchBtn" aria-label="Search">
+              <i class="fas fa-search"></i> Search
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-num" id="statListings">—</div>
+            <div class="hero-stat-label">Active Listings</div>
+          </div>
+          <div class="hero-stat-divider"></div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">15 min</div>
+            <div class="hero-stat-label">Avg. Apply Time</div>
+          </div>
+          <div class="hero-stat-divider"></div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">50 States</div>
+            <div class="hero-stat-label">Coverage</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Trust Strip ── -->
+<div class="trust-strip">
+  <div class="trust-strip-inner">
+    <div class="trust-strip-item"><i class="fas fa-shield-alt"></i> Verified Listings</div>
+    <div class="trust-strip-item"><i class="fas fa-clock"></i> 15-Min Application</div>
+    <div class="trust-strip-item"><i class="fas fa-lock"></i> Bank-Level Security</div>
+    <div class="trust-strip-item"><i class="fas fa-bell"></i> Real-Time Updates</div>
+    <div class="trust-strip-item"><i class="fas fa-map-marker-alt"></i> All 50 States</div>
+  </div>
+</div>
+
+<!-- ── Featured Listings ── -->
+<section class="featured-section" id="featuredSection" style="display:none">
+  <div class="container">
+    <div class="featured-header">
+      <div>
+        <div class="section-eyebrow"><i class="fas fa-bolt" style="font-size:9px"></i> Available Now</div>
+        <h2 class="featured-title">Featured Listings</h2>
+        <p class="featured-subtitle">Our newest available homes — updated in real time.</p>
+      </div>
+      <a href="/listings.html" class="featured-view-all">View All Listings <i class="fas fa-arrow-right" style="font-size:10px"></i></a>
+    </div>
+
+    <div class="property-grid" id="featuredGrid">
+      <div class="property-card property-card-skeleton">
+        <div class="property-card-img skeleton-img skeleton"></div>
+        <div class="property-card-body" style="gap:10px;padding:20px">
+          <div class="skeleton-line w-40 skeleton"></div>
+          <div class="skeleton-line w-80 skeleton"></div>
+          <div class="skeleton-line w-60 skeleton"></div>
+        </div>
+      </div>
+      <div class="property-card property-card-skeleton">
+        <div class="property-card-img skeleton-img skeleton"></div>
+        <div class="property-card-body" style="gap:10px;padding:20px">
+          <div class="skeleton-line w-40 skeleton"></div>
+          <div class="skeleton-line w-80 skeleton"></div>
+          <div class="skeleton-line w-60 skeleton"></div>
+        </div>
+      </div>
+      <div class="property-card property-card-skeleton">
+        <div class="property-card-img skeleton-img skeleton"></div>
+        <div class="property-card-body" style="gap:10px;padding:20px">
+          <div class="skeleton-line w-40 skeleton"></div>
+          <div class="skeleton-line w-80 skeleton"></div>
+          <div class="skeleton-line w-60 skeleton"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="featured-cta">
+      <a href="/listings.html" class="btn btn-primary btn-lg">Browse All Listings <i class="fas fa-arrow-right" style="font-size:12px;margin-left:4px"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- ── How It Works ── -->
+<section class="hiw-section" id="how-it-works">
+  <div class="hiw-section-glow"></div>
+  <div class="container" style="position:relative;z-index:1">
+    <div class="hiw-header">
+      <div class="section-eyebrow hiw-eyebrow">Simple Process</div>
+      <h2 class="hiw-title">Rent Your Next Home in 3 Easy Steps</h2>
+      <p class="hiw-subtitle">From your first search to signing your lease — we keep it fast, clear, and stress‑free.</p>
+    </div>
+    <div class="hiw-track">
+      <div class="hiw-connector"></div>
+      <div class="hiw-steps">
+        <div class="hiw-step">
+          <div class="hiw-step-bubble">
+            <span>01</span>
+          </div>
+          <div class="hiw-step-body">
+            <div class="hiw-step-icon"><i class="fas fa-search"></i></div>
+            <h3 class="hiw-step-title">Find Your Home</h3>
+            <p class="hiw-step-desc">Browse verified rentals across all 50 states. Filter by bedrooms, price, pet policy, and more to find your perfect fit.</p>
+          </div>
+        </div>
+        <div class="hiw-step">
+          <div class="hiw-step-bubble">
+            <span>02</span>
+          </div>
+          <div class="hiw-step-body">
+            <div class="hiw-step-icon"><i class="fas fa-file-alt"></i></div>
+            <h3 class="hiw-step-title">Apply Online</h3>
+            <p class="hiw-step-desc">Complete our secure 15-minute application from any device. No printing, no faxing — everything is handled online.</p>
+          </div>
+        </div>
+        <div class="hiw-step">
+          <div class="hiw-step-bubble hiw-step-bubble--last">
+            <span>03</span>
+          </div>
+          <div class="hiw-step-body">
+            <div class="hiw-step-icon"><i class="fas fa-key"></i></div>
+            <h3 class="hiw-step-title">Move In</h3>
+            <p class="hiw-step-desc">Get approved, sign your lease digitally, and coordinate your move-in with your landlord. Welcome home.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hiw-cta">
+      <a href="/listings.html" class="btn btn-primary btn-lg">Browse Listings</a>
+      <a href="/how-to-apply.html" class="hiw-cta-link">Learn more about the process <i class="fas fa-arrow-right" style="font-size:11px"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Why Choose Us ── -->
+<section class="why-section">
+  <div class="why-bg"></div>
+  <div class="container">
+    <div style="text-align:center">
+      <div class="section-eyebrow">Why Choice Properties</div>
+      <h2 class="section-title">Renting Made Simple,<br>Transparent &amp; Fast</h2>
+    </div>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-card-num">01</div>
+        <h3>Verified Listings</h3>
+        <p>Every property is listed directly by verified landlords and monitored for quality. No scams, no ghost listings, no bait-and-switch tactics — ever.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-card-num">02</div>
+        <h3>Apply in 15 Minutes</h3>
+        <p>Our streamlined online application takes about 15 minutes from your phone. No printing, no faxing, no office visits required.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-card-num">03</div>
+        <h3>Personal Service</h3>
+        <p>Our team is dedicated, responsive, and genuinely invested in helping you find the right home — not just closing a deal.</p>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:var(--space-12)">
+      <a href="/listings.html" class="btn btn-primary why-cta-btn">Browse Available Listings</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-logo">
+          <div class="footer-logo-emblem">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="white" opacity="0.92"/>
+              <circle cx="12" cy="11" r="2.5" fill="rgba(0,106,255,0.9)"/>
+            </svg>
+          </div>
+          <div class="footer-brand-name">Choice Properties</div>
+        </div>
+        <p class="footer-brand-desc">America's trusted rental marketplace. Connecting quality tenants with verified landlords across all 50 states.</p>
+        <a href="mailto:support@choiceproperties.com" class="footer-contact-item" data-cfg-email><i class="fas fa-envelope"></i> support@choiceproperties.com</a>
+        <div class="footer-contact-item"><i class="fas fa-globe-americas"></i> Nationwide Rental Marketplace</div>
+      </div>
+      <div>
+        <div class="footer-heading">Renters</div>
+        <ul class="footer-links">
+          <li><a href="/listings.html">Browse Listings</a></li>
+          <li><a href="/how-to-apply.html">How to Apply</a></li>
+          <li><a href="/faq.html">FAQ</a></li>
+          <li><a href="/apply/dashboard.html" target="_blank" rel="noopener noreferrer">Track My Application</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-heading">Landlords</div>
+        <ul class="footer-links">
+          <li><a href="/landlord/register.html">List a Property</a></li>
+          <li><a href="/landlord/login.html">Landlord Login</a></li>
+          <li><a href="/how-it-works.html">How It Works</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-heading">Company</div>
+        <ul class="footer-links">
+          <li><a href="/about.html">About Us</a></li>
+          <li><a href="/privacy.html">Privacy Policy</a></li>
+          <li><a href="/terms.html">Terms of Service</a></li>
+          <li><a href="mailto:support@choiceproperties.com" data-cfg-email>Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-legal">© 2026 Choice Properties. All rights reserved.</span>
+      <span class="footer-eq"><i class="fas fa-home" aria-hidden="true"></i> Equal Housing Opportunity</span>
+      <div class="footer-bottom-links">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="toast-container" id="toastContainer"></div>
+<button class="scroll-top" id="scrollTopBtn" aria-label="Back to top"><i class="fas fa-chevron-up"></i></button>
+
+<script type="module">
+const supabase = CP.sb();
+
+(async () => {
+  setupMobileDrawer();
+  setupNavScroll();
+  setupScrollTop();
+  updateNav();
+
+  // Load featured listings + hero stat count in parallel
+  const [, countResult] = await Promise.allSettled([
+    loadFeaturedListings(),
+    supabase.from('properties').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+  ]);
+  const el = document.getElementById('statListings');
+  if (el) {
+    const count = countResult.status === 'fulfilled' ? countResult.value?.data?.length ?? countResult.value?.count : null;
+    if (count != null) el.textContent = count;
+    else el.closest('.hero-stat').style.display = 'none';
+  }
+})();
+
+// ── Featured listings loader ───────────────────────────────
+async function loadFeaturedListings() {
+  const section = document.getElementById('featuredSection');
+  const grid    = document.getElementById('featuredGrid');
+  if (!section || !grid) return;
+  if (!CONFIG.SUPABASE_URL) return; // no credentials yet — stay hidden
+
+  try {
+    const { data: props, error } = await supabase
+      .from('properties')
+      .select('*, landlords(contact_name, business_name, avatar_url, verified)')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(6);
+
+    if (error || !props || !props.length) return;
+
+    grid.innerHTML = props.map(p => buildFeaturedCard(p)).join('');
+
+    grid.querySelectorAll('.property-card').forEach(card => {
+      initFeaturedCarousel(card);
+      card.addEventListener('click', e => {
+        if (e.target.closest('a, button')) return;
+        window.location.href = `/property.html?id=${card.dataset.id}`;
+      });
+    });
+
+    section.style.display = '';
+    animateFeaturedCards();
+  } catch (_) {
+    // silently hide — never break the homepage
+  }
+}
+
+// ── Card builder (mirrors listings.html buildCard) ────────
+function buildFeaturedCard(p) {
+  const photos   = p.photo_urls?.length ? p.photo_urls : ['/assets/placeholder-property.jpg'];
+  const avail    = p.available_date ? featFmtAvail(p.available_date) : 'Available Now';
+  const availNow = !p.available_date || new Date(p.available_date) <= new Date();
+  const applyURL = `/apply.html?property_id=${p.id}${p.title ? '&property_name=' + encodeURIComponent(p.title) : ''}`;
+  const imgSizes = '(max-width: 539px) calc(100vw - 32px), (max-width: 899px) calc(50vw - 28px), calc(33vw - 32px)';
+
+  const slidesHtml = photos.map((url, i) =>
+    `<div class="property-card-slide"><img src="${CONFIG.img(url,'card')}" alt="${p.title} photo ${i+1}" sizes="${imgSizes}" loading="${i===0?'eager':'lazy'}" ${i===0?'fetchpriority="high"':''} decoding="async" onload="this.classList.add('cp-img-loaded')" onerror="this.classList.add('cp-img-loaded');this.src='/assets/placeholder-property.jpg'"></div>`
+  ).join('');
+
+  const tags = [];
+  if (p.pets_allowed) tags.push(`<span class="property-card-tag tag-pet"><i class="fas fa-paw"></i> Pets OK</span>`);
+  if (p.parking) tags.push(`<span class="property-card-tag tag-parking"><i class="fas fa-car"></i> Parking</span>`);
+  if (Array.isArray(p.utilities_included) ? p.utilities_included.length > 0 : !!p.utilities_included)
+    tags.push(`<span class="property-card-tag tag-utilities"><i class="fas fa-bolt"></i> Utilities</span>`);
+
+  const addrLine = [p.address, p.city, p.state].filter(Boolean).join(', ');
+
+  const specParts = [];
+  if (p.bedrooms != null) specParts.push(`<span class="property-card-spec-item"><i class="fas fa-bed"></i>${p.bedrooms === 0 ? 'Studio' : p.bedrooms + ' Bed'}</span>`);
+  if (p.bathrooms)        specParts.push(`<span class="property-card-spec-item"><i class="fas fa-bath"></i>${p.bathrooms} Bath</span>`);
+  if (p.square_footage)   specParts.push(`<span class="property-card-spec-item">${p.square_footage.toLocaleString()} sqft</span>`);
+  const specsHtml = specParts.map((s, i) => i === 0 ? s : `<span class="property-card-spec-sep">·</span>${s}`).join('');
+
+  const ageDays = p.created_at ? Math.floor((Date.now() - new Date(p.created_at).getTime()) / 86400000) : 999;
+  let badge = '';
+  if (p.featured) {
+    badge = `<div class="property-card-badge badge-featured"><i class="fas fa-star"></i> Featured</div>`;
+  } else if (ageDays <= 3) {
+    badge = `<div class="property-card-badge badge-hot"><i class="fas fa-fire"></i> Hot Deal</div>`;
+  } else if (ageDays <= 7) {
+    badge = `<div class="property-card-badge badge-new"><i class="fas fa-tag"></i> New Listing</div>`;
+  } else if (p.landlords?.verified) {
+    badge = `<div class="property-card-badge badge-verified"><i class="fas fa-shield-halved"></i> Verified</div>`;
+  } else if (availNow || !p.available_date) {
+    badge = `<div class="property-card-badge badge-available"><i class="fas fa-circle-check"></i> Available Now</div>`;
+  } else {
+    const availLabel = new Date(p.available_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    badge = `<div class="property-card-badge badge-available"><i class="fas fa-calendar"></i> Avail. ${availLabel}</div>`;
+  }
+  const photoCountHtml = photos.length > 1 ? `<div class="property-card-photo-count"><i class="fas fa-camera"></i> ${photos.length}</div>` : '';
+  const dotsHtml = photos.length > 1 ? photos.slice(0, 8).map((_, i) => `<button class="property-card-dot${i === 0 ? ' active' : ''}" data-idx="${i}" aria-label="Photo ${i + 1}"></button>`).join('') : '';
+
+  return `
+    <article class="property-card" data-id="${p.id}">
+      <a href="/property.html?id=${p.id}" style="display:block;text-decoration:none" tabindex="-1" aria-hidden="true">
+        <div class="property-card-img">
+          <div class="property-card-slides">${slidesHtml}</div>
+          ${photos.length > 1 ? `
+            <button class="property-card-nav prev" data-dir="-1" aria-label="Previous photo"><i class="fas fa-chevron-left"></i></button>
+            <button class="property-card-nav next" data-dir="1"  aria-label="Next photo"><i class="fas fa-chevron-right"></i></button>
+          ` : ''}
+          ${badge}
+          ${dotsHtml ? `<div class="property-card-dots">${dotsHtml}</div>` : ''}
+          ${photoCountHtml}
+        </div>
+      </a>
+      <button class="property-card-save" data-id="${p.id}" aria-label="Save property"><i class="far fa-heart"></i></button>
+      <div class="property-card-body">
+        <div class="property-card-price">$${p.monthly_rent.toLocaleString()}<span class="property-card-price-unit">/mo</span></div>
+        ${specsHtml ? `<div class="property-card-specs">${specsHtml}</div>` : ''}
+        <a href="/property.html?id=${p.id}" style="text-decoration:none">
+          <div class="property-card-title">${p.title}</div>
+        </a>
+        <div class="property-card-addr"><i class="fas fa-location-dot"></i>${addrLine}</div>
+        ${tags.length ? `<div class="property-card-tags">${tags.join('')}</div>` : ''}
+      </div>
+    </article>`;
+}
+
+// ── Carousel (same logic as listings.html) ────────────────
+function initFeaturedCarousel(card) {
+  const slides  = card.querySelector('.property-card-slides');
+  const dots    = card.querySelectorAll('.property-card-dot');
+  const navBtns = card.querySelectorAll('.property-card-nav');
+  if (!slides || !navBtns.length) return;
+  let idx = 0;
+  const total = card.querySelectorAll('.property-card-slide').length;
+  function goTo(n) {
+    idx = (n + total) % total;
+    slides.style.transform = `translateX(-${idx * 100}%)`;
+    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+  }
+  navBtns.forEach(btn => btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); goTo(idx + parseInt(btn.dataset.dir)); }));
+  dots.forEach(dot => dot.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); goTo(parseInt(dot.dataset.idx)); }));
+  let touchX = 0;
+  slides.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+  slides.addEventListener('touchend', e => { const diff = touchX - e.changedTouches[0].clientX; if (Math.abs(diff) > 40) goTo(idx + (diff > 0 ? 1 : -1)); }, { passive: true });
+}
+
+// ── Staggered entrance animation ──────────────────────────
+function animateFeaturedCards() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('#featuredGrid .property-card').forEach(c => c.classList.add('cp-card-visible'));
+    return;
+  }
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('cp-card-visible'); observer.unobserve(e.target); } });
+  }, { threshold: 0.06 });
+  document.querySelectorAll('#featuredGrid .property-card').forEach((card, i) => {
+    card.style.setProperty('--cp-delay', Math.min(i * 60, 320) + 'ms');
+    observer.observe(card);
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function featDom(createdAt) { return Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000); }
+function featFmtAvail(dateStr) { const d = new Date(dateStr); return d <= new Date() ? 'Available Now' : 'Avail. ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+function featCap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// Hero search → redirect to listings page with params
+document.getElementById('searchBtn').addEventListener('click', goToListings);
+document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') goToListings(); });
+
+function goToListings() {
+  const q       = document.getElementById('searchInput').value.trim();
+  const beds    = document.getElementById('bedroomsFilter').value;
+  const maxrent = document.getElementById('maxRentFilter').value;
+  const params  = new URLSearchParams();
+  if (q)       params.set('q', q);
+  if (beds)    params.set('beds', beds);
+  if (maxrent) params.set('maxrent', maxrent);
+  const qs = params.toString();
+  window.location.href = `/listings.html${qs ? '?' + qs : ''}`;
+}
+
+async function updateNav() {
+  const session  = await CP.Auth.getSession();
+  const authLink = document.getElementById('navAuthLink');
+  const drawerLink = document.getElementById('drawerAuthLink');
+  const drawerListLink = document.getElementById('drawerListPropertyLink');
+  const dest  = session ? '/landlord/dashboard.html' : '/landlord/login.html';
+  const label = session ? 'My Dashboard' : 'Landlord Login';
+  if (authLink)   { authLink.href = dest;   authLink.textContent = label; }
+  if (drawerLink) { drawerLink.href = dest; drawerLink.textContent = label; }
+  if (session && drawerListLink) drawerListLink.href = '/landlord/new-listing.html';
+  if (window.CONFIG) {
+    const footerEmail = document.getElementById('drawerFooterEmail');
+    if (footerEmail) { footerEmail.href = `mailto:${CONFIG.COMPANY_EMAIL}`; footerEmail.textContent = CONFIG.COMPANY_EMAIL; }
+    document.querySelectorAll('[data-cfg-email]').forEach(el => { el.href = `mailto:${CONFIG.COMPANY_EMAIL}`; el.textContent = CONFIG.COMPANY_EMAIL; });
+    document.querySelectorAll('[data-cfg-phone]').forEach(el => { el.href = `tel:${CONFIG.COMPANY_PHONE.replace(/\D/g,'')}`; el.textContent = CONFIG.COMPANY_PHONE; });
+  }
+}
+
+function setupMobileDrawer() {
+  const toggle  = document.getElementById('mobileToggle');
+  const drawer  = document.getElementById('navDrawer');
+  const overlay = document.getElementById('drawerOverlay');
+  const close   = document.getElementById('drawerClose');
+  const openDrawer  = () => { overlay.classList.add('visible'); setTimeout(() => { overlay.classList.add('open'); drawer.classList.add('open'); }, 10); document.body.style.overflow = 'hidden'; };
+  const closeDrawer = () => { overlay.classList.remove('open'); drawer.classList.remove('open'); document.body.style.overflow = ''; setTimeout(() => { overlay.classList.remove('visible'); }, 360); };
+  toggle.addEventListener('click', openDrawer);
+  close.addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', closeDrawer);
+}
+
+function setupNavScroll() {
+  const nav = document.getElementById('mainNav');
+  window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 10), { passive: true });
+}
+
+function setupScrollTop() {
+  const btn = document.getElementById('scrollTopBtn');
+  window.addEventListener('scroll', () => btn.classList.toggle('visible', window.scrollY > 400), { passive: true });
+  btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+}
+</script>
+</body>
+</html>

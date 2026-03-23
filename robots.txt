@@ -1,0 +1,25 @@
+User-agent: *
+
+# Private portals — no indexing
+Disallow: /admin/
+Disallow: /landlord/login.html
+Disallow: /landlord/register.html
+Disallow: /landlord/dashboard.html
+Disallow: /landlord/applications.html
+Disallow: /landlord/inquiries.html
+Disallow: /landlord/new-listing.html
+Disallow: /landlord/edit-listing.html
+Disallow: /landlord/settings.html
+
+# Application flow — contains personal data
+Disallow: /apply.html
+Disallow: /apply/
+
+# Internal tooling
+Disallow: /health.html
+
+# Public landlord profiles are allowed
+Allow: /landlord/profile.html
+
+# TODO: Replace with your real domain after deployment
+Sitemap: https://YOUR-DOMAIN.com/sitemap.xml

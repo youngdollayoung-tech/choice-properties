@@ -1,0 +1,16 @@
+{
+  "name": "choice-properties",
+  "version": "1.0.0",
+  "private": true,
+  "description": "STATIC SITE — Cloudflare Pages deployment. No Node.js backend. No Replit database. No ORM. API = Supabase Edge Functions (Supabase cloud). Do not add backend dependencies.",
+  "scripts": {
+    "start": "node serve.js",
+    "build": "node generate-config.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "pg": "^8.20.0"
+  }
+}
