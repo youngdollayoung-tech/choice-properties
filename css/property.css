@@ -823,70 +823,7 @@
    DESIGN ENHANCEMENTS
    ══════════════════════════════════════════════════════════════ */
 
-/* ── 1. GALLERY HERO INFO OVERLAY ────────────────────────────
-   Gradient + title/price/status at the bottom of the main photo.
-   Hidden until JS populates it. */
-.gallery-info-bar {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  z-index: 20;
-  padding: 64px 22px 18px;
-  background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.42) 48%, transparent 100%);
-  display: none;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-  pointer-events: none;
-  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
-}
-.gallery-info-bar.visible { display: flex; }
-
-.gib-left { display: flex; flex-direction: column; min-width: 0; }
-
-.gib-status {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: rgba(5, 150, 105, 0.88);
-  border: 1px solid rgba(52, 211, 153, 0.38);
-  backdrop-filter: blur(8px);
-  color: #fff; font-size: 10.5px; font-weight: 700; letter-spacing: 0.07em;
-  text-transform: uppercase;
-  padding: 4px 10px; border-radius: 20px; margin-bottom: 7px;
-  width: fit-content;
-}
-.gib-status.unavail { background: rgba(217, 119, 6, 0.88); border-color: rgba(252, 211, 77, 0.38); }
-.gib-status i { font-size: 6px; }
-
-.gib-title {
-  font-size: clamp(14px, 2.2vw, 19px);
-  font-weight: 700; color: #fff; letter-spacing: -0.02em;
-  text-shadow: 0 1px 6px rgba(0,0,0,0.55);
-  line-height: 1.25;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.gib-addr {
-  font-size: 12px; color: rgba(255,255,255,0.70);
-  margin-top: 3px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.gib-price {
-  flex-shrink: 0; text-align: right;
-  font-size: clamp(20px, 2.8vw, 28px); font-weight: 800;
-  color: #fff; letter-spacing: -0.03em;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.55);
-  line-height: 1;
-}
-.gib-price span {
-  font-size: 11.5px; font-weight: 400; opacity: 0.60;
-  display: block; letter-spacing: 0; margin-top: 2px;
-}
-
-@media (max-width: 768px) {
-  .gallery-info-bar { padding: 44px 14px 14px; border-radius: 0 0 var(--radius-xl) var(--radius-xl); }
-  .gib-title { font-size: 14px; }
-  .gib-price { font-size: 20px; }
-}
-
-/* ── 2. SECTION HEADER ACCENT ────────────────────────────────
+/* ── SECTION HEADER ACCENT ───────────────────────────────────
    Short brand-blue underline replaces the full-width muted border. */
 .detail-section-title {
   border-bottom: none;

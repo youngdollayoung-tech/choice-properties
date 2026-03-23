@@ -110,15 +110,6 @@
   <!-- Main large panel -->
   <div class="mosaic-main" id="mosaicMain">
     <img class="mosaic-main-img" id="mosaicMainImg" src="" alt="Property photo" fetchpriority="high" decoding="async">
-    <!-- Gallery hero info overlay — title + price + status (populated by JS) -->
-    <div class="gallery-info-bar" id="galleryInfoBar">
-      <div class="gib-left">
-        <div class="gib-status" id="gibStatus"></div>
-        <div class="gib-title" id="gibTitle"></div>
-        <div class="gib-addr" id="gibAddr"></div>
-      </div>
-      <div class="gib-price" id="gibPrice"></div>
-    </div>
   </div>
   <!-- Right 2×2 side grid -->
   <div class="mosaic-side" id="mosaicSide"></div>
@@ -735,21 +726,7 @@ function renderProperty(p) {
     mapOpenBtn.style.display = '';
   }
 
-  // Gallery hero info overlay
   const availNow = !p.available_date || new Date(p.available_date) <= new Date();
-  const gibStatus = document.getElementById('gibStatus');
-  if (gibStatus) {
-    gibStatus.innerHTML = `<i class="fas fa-circle"></i> ${availNow ? 'Available Now' : 'Available ' + formatDate(p.available_date)}`;
-    if (!availNow) gibStatus.classList.add('unavail');
-  }
-  const gibTitle = document.getElementById('gibTitle');
-  if (gibTitle) gibTitle.textContent = p.title;
-  const gibAddr = document.getElementById('gibAddr');
-  if (gibAddr) gibAddr.textContent = `${p.address}, ${p.city}, ${p.state}`;
-  const gibPrice = document.getElementById('gibPrice');
-  if (gibPrice) gibPrice.innerHTML = `$${p.monthly_rent.toLocaleString()}<span>/month</span>`;
-  const gibBar = document.getElementById('galleryInfoBar');
-  if (gibBar) gibBar.classList.add('visible');
 
   // Sidebar
   document.getElementById('sidebarPrice').innerHTML = `$${p.monthly_rent.toLocaleString()}<span>/month</span>`;
