@@ -849,55 +849,6 @@
 .amenity-item i.icon-rose   { color: #e11d48; }
 .amenity-item i.icon-teal   { color: #0d9488; }
 
-/* ── 4. MOBILE GALLERY NAV ARROWS ───────────────────────────
-   Enable the swipe arrows on phones. */
-@media (max-width: 768px) {
-  .mosaic-nav-btn {
-    display: flex !important;
-    position: absolute;
-    top: 50%; transform: translateY(-50%);
-    width: 34px; height: 34px;
-    background: rgba(255,255,255,0.90);
-    border: none; border-radius: 50%;
-    color: #0a1628; font-size: 12px;
-    align-items: center; justify-content: center;
-    cursor: pointer; z-index: 15;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.22);
-    transition: background 150ms ease, transform 150ms ease;
-  }
-  .mosaic-nav-btn:active {
-    background: rgba(255,255,255,1);
-    transform: translateY(-50%) scale(0.92);
-  }
-  .mosaic-nav-btn.prev { left: 10px; }
-  .mosaic-nav-btn.next { right: 10px; }
-}
-
-/* ── 5. MOBILE GALLERY DOTS ──────────────────────────────────
-   Dot indicators on mobile so renters know how many photos exist. */
-@media (max-width: 768px) {
-  .mosaic-dots {
-    display: flex !important;
-    position: absolute;
-    bottom: 52px;
-    left: 50%; transform: translateX(-50%);
-    gap: 5px; z-index: 15;
-    pointer-events: auto;
-  }
-  .mosaic-dot {
-    display: block !important;
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.45);
-    cursor: pointer;
-    transition: background 180ms ease, transform 180ms ease;
-    border: none; padding: 0; flex-shrink: 0;
-  }
-  .mosaic-dot.active {
-    background: #fff;
-    transform: scale(1.40);
-  }
-}
 
 /* ── 6. DESCRIPTION READ-MORE ────────────────────────────────
    Truncate long descriptions with a tap-to-expand button. */
