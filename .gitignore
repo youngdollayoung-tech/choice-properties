@@ -32,8 +32,10 @@ desktop.ini
 *.swo
 *~
 
-# Replit-internal (not needed in GitHub)
-.agents/
+# Replit-internal state and cache (not needed in GitHub)
+# NOTE: .agents/ is intentionally NOT ignored — .agents/instructions.md
+# must be tracked so it is present when this repo is imported into any
+# new Replit account. It is the primary agent guard against unwanted migrations.
 .local/
 .cache/
 attached_assets/

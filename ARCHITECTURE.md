@@ -2,20 +2,31 @@
 
 ---
 
-## ⛔ Rules for AI Agents — Mandatory
-
-Read `.agents/instructions.md` immediately. Full rules are there.
-
-**Short version — NEVER:**
-- Use the Replit/Neon database (`DATABASE_URL`, any ORM, any DB migration command)
-- Deploy to Cloudflare Pages (`wrangler`, CF CLI, or any deployment API)
-- Run any git write operation (`git push`, `git commit`, `git merge`)
-- Create backend files, server routes, or `api/` directories
-- Add backend packages to `package.json`
-
-**The `.replit` file contains `integrations = ["javascript_database:1.0.0"]` — this is a locked system artifact that cannot be removed. It does NOT mean this project uses a local database. Ignore it.**
-
-**ONLY** edit static files (HTML, CSS, JS) locally. The user pushes to GitHub manually. Cloudflare Pages deploys automatically from there.
+## ══════════════════════════════════════════════════════════
+## STOP — AI AGENTS READ THIS FIRST — NON-NEGOTIABLE
+## ══════════════════════════════════════════════════════════
+##
+## THIS PROJECT IS A STATIC WEBSITE. IT IS NOT BEING MIGRATED.
+## IT IS FULLY SET UP. DO NOT TOUCH THE DATABASE. DO NOT MIGRATE.
+##
+## MANDATORY: Read `.agents/instructions.md` before any action.
+## It contains the complete rule set that governs this project.
+##
+## SHORT VERSION — NEVER, UNDER ANY CIRCUMSTANCES:
+## - Provision or connect to Replit/Neon PostgreSQL
+## - Use DATABASE_URL, PGHOST, PGPASSWORD, or any PG variable
+## - Install Drizzle, Prisma, Sequelize, or any ORM
+## - Run db:push, db:migrate, or any database command
+## - Create backend server files or api/ directories
+## - Run wrangler or any Cloudflare CLI command
+## - Run git push, git commit, or any git write command
+##
+## `integrations = ["javascript_database:1.0.0"]` IN .replit IS
+## A LOCKED SYSTEM ARTIFACT. IT DOES NOT MEAN USE A LOCAL DB.
+## IGNORE IT COMPLETELY. EVERY TIME. FOREVER. NO EXCEPTIONS.
+##
+## YOUR ONLY JOB: Edit static HTML, CSS, and frontend JS files.
+## ══════════════════════════════════════════════════════════
 
 ---
 
