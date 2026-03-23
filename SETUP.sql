@@ -19,6 +19,11 @@
 --        GAS_EMAIL_URL, GAS_RELAY_SECRET, DASHBOARD_URL,
 --        ADMIN_EMAIL, IMAGEKIT_PRIVATE_KEY
 --   4. Deploy Edge Functions from supabase/functions/
+--
+-- NOTE: Section 18 (pg_cron) requires the pg_cron extension.
+--   Enable it first: Supabase → Database → Extensions → pg_cron
+--   This file will skip the cron block gracefully if pg_cron is
+--   not yet enabled and print a NOTICE instead of erroring out.
 -- ============================================================
 
 
@@ -232,7 +237,7 @@ CREATE TABLE IF NOT EXISTS applications (
   email                            TEXT NOT NULL,
   phone                            TEXT NOT NULL,
   dob                              TEXT,
-  ssn                              TEXT,  -- stored as XXX-XX-XXXX (last 4 only)
+  ssn                              TEXT,  -- stored as XXX-XX-XXXX (last 4 only, masked by Edge Function)
   requested_move_in_date           TEXT,
   desired_lease_term               TEXT,
 
@@ -319,7 +324,10 @@ CREATE TABLE IF NOT EXISTS applications (
   co_applicant_email               TEXT,
   co_applicant_phone               TEXT,
   co_applicant_dob                 TEXT,
-  co_applicant_ssn                 TEXT,  -- stored as XXX-XX-XXXX (last 4 only)
+  -- co_applicant_ssn is set by the process-application Edge Function (service role)
+  -- using the same XXX-XX-XXXX masking as ssn above. Direct DB inserts must leave
+  -- this NULL per the RLS policy; the Edge Function sets the masked value server-side.
+  co_applicant_ssn                 TEXT,
   co_applicant_employer            TEXT,
   co_applicant_job_title           TEXT,
   co_applicant_monthly_income      TEXT,
@@ -404,11 +412,12 @@ CREATE TABLE IF NOT EXISTS email_logs (
 
 -- ============================================================
 -- 9. SAVED PROPERTIES TABLE
--- user_id links to auth.users for ownership-based RLS.
+-- user_id is UUID with a FK to auth.users for ownership-based
+-- RLS and referential integrity.
 -- ============================================================
 CREATE TABLE IF NOT EXISTS saved_properties (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     TEXT,  -- auth.uid()::text — set by client on insert
+  user_id     UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   property_id TEXT REFERENCES properties(id) ON DELETE CASCADE,
   created_at  TIMESTAMPTZ DEFAULT now()
 );
@@ -473,6 +482,8 @@ BEGIN
   RETURN v_id;
 END;
 $$;
+-- FIX #10: grant was missing — added to match generate_property_id() pattern
+GRANT EXECUTE ON FUNCTION generate_app_id() TO authenticated;
 
 -- generate_property_id(): creates PROP-XXXXXXXX property IDs (server-side)
 CREATE OR REPLACE FUNCTION generate_property_id()
@@ -511,6 +522,8 @@ BEGIN
     WHERE id = p_id;
 END;
 $$;
+-- FIX #2: grant was missing — anon callers (public listing views) need this
+GRANT EXECUTE ON FUNCTION increment_counter(TEXT, TEXT, TEXT) TO anon, authenticated;
 
 
 -- ============================================================
@@ -557,10 +570,12 @@ CREATE POLICY "landlords_own_write"   ON landlords FOR ALL   USING (user_id = au
 CREATE POLICY "properties_admin_all" ON properties FOR ALL USING (is_admin());
 CREATE POLICY "properties_public_read" ON properties
   FOR SELECT USING (status = 'active');
+-- FIX #8: removed redundant `OR status = 'active'` — properties_public_read already
+-- covers active properties for everyone. This policy now only adds the landlord's
+-- own non-active properties on top of what public_read already grants.
 CREATE POLICY "properties_landlord_read" ON properties
   FOR SELECT USING (
     landlord_id = (SELECT id FROM landlords WHERE user_id = auth.uid())
-    OR status = 'active'
   );
 CREATE POLICY "properties_landlord_write" ON properties
   FOR ALL
@@ -594,16 +609,12 @@ CREATE POLICY "applications_landlord_read" ON applications
 -- Authenticated applicants can read their own applications
 CREATE POLICY "applications_applicant_read" ON applications
   FOR SELECT USING (applicant_user_id = auth.uid());
--- Hardened public insert: status/payment_status/landlord_id/SSN must be null/default
--- (Edge Function uses service role to set these fields server-side)
-CREATE POLICY "applications_public_insert" ON applications
-  FOR INSERT WITH CHECK (
-    status           = 'pending'
-    AND payment_status   = 'unpaid'
-    AND landlord_id      IS NULL
-    AND ssn              IS NULL
-    AND co_applicant_ssn IS NULL
-  );
+
+-- FIX #4: Removed applications_public_insert policy.
+-- All application inserts go through the process-application Edge Function which
+-- uses the service-role key (bypassing RLS). Allowing direct anonymous inserts
+-- bypasses rate limiting, SSN masking, email notifications, and generate_app_id().
+-- No permissive INSERT policy is needed here.
 
 -- messages
 CREATE POLICY "messages_admin_all" ON messages FOR ALL USING (is_admin());
@@ -618,13 +629,14 @@ CREATE POLICY "messages_landlord_read" ON messages
 -- email_logs
 CREATE POLICY "email_logs_admin_all" ON email_logs FOR ALL USING (is_admin());
 
--- saved_properties (ownership-based: each user sees only their own saves)
+-- saved_properties
+-- FIX #7: user_id is now UUID (was TEXT), so cast removed from policy comparisons.
 CREATE POLICY "saved_properties_select_own" ON saved_properties
-  FOR SELECT USING (user_id = auth.uid()::text);
+  FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "saved_properties_insert_own" ON saved_properties
-  FOR INSERT WITH CHECK (user_id = auth.uid()::text);
+  FOR INSERT WITH CHECK (user_id = auth.uid());
 CREATE POLICY "saved_properties_delete_own" ON saved_properties
-  FOR DELETE USING (user_id = auth.uid()::text);
+  FOR DELETE USING (user_id = auth.uid());
 CREATE POLICY "saved_properties_admin_all"  ON saved_properties
   FOR ALL USING (is_admin());
 
@@ -929,8 +941,10 @@ GRANT EXECUTE ON FUNCTION claim_application(TEXT, TEXT) TO authenticated;
 
 -- ── get_apps_by_email ────────────────────────────────────────
 -- Returns app_id + property_address for recovery/lookup.
--- Does NOT return status (avoids leaking approval state to anyone
--- who knows someone's email address).
+-- Does NOT return status (avoids leaking approval state).
+-- FIX #5: Restricted to authenticated only — anon access allowed any
+-- visitor to enumerate application IDs and property addresses for
+-- any email address, a PII disclosure risk.
 CREATE OR REPLACE FUNCTION get_apps_by_email(p_email TEXT)
 RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
@@ -946,11 +960,13 @@ BEGIN
   );
 END;
 $$;
-GRANT EXECUTE ON FUNCTION get_apps_by_email(TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_apps_by_email(TEXT) TO authenticated;
 
 
 -- ── get_app_id_by_email ──────────────────────────────────────
 -- Returns the most recent app_id for an email (single-app lookup).
+-- FIX #5: Restricted to authenticated only — same PII disclosure
+-- risk as get_apps_by_email() if exposed to anon callers.
 CREATE OR REPLACE FUNCTION get_app_id_by_email(p_email TEXT)
 RETURNS TEXT LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
@@ -962,17 +978,28 @@ BEGIN
   RETURN v_app_id;
 END;
 $$;
-GRANT EXECUTE ON FUNCTION get_app_id_by_email(TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_app_id_by_email(TEXT) TO authenticated;
 
 
 -- ── mark_expired_leases ──────────────────────────────────────
 -- Bulk-marks stale 'sent' leases as 'expired' where expiry_date
--- has passed. Called by the admin Leases page on every load.
+-- has passed. Called by the admin Leases page and by the nightly
+-- pg_cron job.
+-- FIX #3: Added admin guard. auth.uid() IS NULL allows the pg_cron
+-- job (which runs without a session) to call this function freely.
+-- Regular authenticated non-admin users are blocked.
 CREATE OR REPLACE FUNCTION mark_expired_leases()
 RETURNS INTEGER LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
   v_count INTEGER;
 BEGIN
+  -- Allow: pg_cron / service-role callers (auth.uid() is NULL)
+  -- Allow: admin users
+  -- Block: all other authenticated users (tenants, landlords)
+  IF auth.uid() IS NOT NULL AND NOT is_admin() THEN
+    RAISE EXCEPTION 'Permission denied';
+  END IF;
+
   UPDATE applications
   SET lease_status = 'expired'
   WHERE lease_status = 'sent'
@@ -1140,7 +1167,11 @@ CREATE VIEW admin_application_view WITH (security_invoker=on) AS
 
 -- ── public_landlord_profiles ─────────────────────────────────
 -- Public-safe landlord profile data (no private contact details).
-CREATE OR REPLACE VIEW public_landlord_profiles AS
+-- FIX #11: Added security_invoker=on so queries run with the
+-- caller's RLS permissions rather than the definer's, consistent
+-- with admin_application_view and safe for future RLS tightening.
+DROP VIEW IF EXISTS public_landlord_profiles;
+CREATE VIEW public_landlord_profiles WITH (security_invoker=on) AS
   SELECT
     id, account_type, business_name, contact_name,
     avatar_url, tagline, bio, website,
@@ -1172,16 +1203,23 @@ INSERT INTO storage.buckets (id, name, public)
   VALUES ('lease-pdfs', 'lease-pdfs', false)
   ON CONFLICT (id) DO NOTHING;
 
--- Ensure lease-pdfs is private
+-- Ensure lease-pdfs and application-docs are private
 UPDATE storage.buckets SET public = false WHERE id = 'lease-pdfs';
 UPDATE storage.buckets SET public = false WHERE id = 'application-docs';
 
--- Drop all existing storage object policies and recreate clean
-DO $$ DECLARE r RECORD; BEGIN
-  FOR r IN (SELECT policyname FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects') LOOP
-    EXECUTE format('DROP POLICY IF EXISTS %I ON storage.objects', r.policyname);
-  END LOOP;
-END $$;
+-- FIX #9: Drop only the specific named policies this file manages instead of
+-- wiping ALL policies on storage.objects. The previous approach silently
+-- destroyed any manually-created policies for other buckets on each re-run.
+DROP POLICY IF EXISTS "property_photos_read"           ON storage.objects;
+DROP POLICY IF EXISTS "property_photos_insert"         ON storage.objects;
+DROP POLICY IF EXISTS "property_photos_update"         ON storage.objects;
+DROP POLICY IF EXISTS "profile_photos_read"            ON storage.objects;
+DROP POLICY IF EXISTS "profile_photos_insert"          ON storage.objects;
+DROP POLICY IF EXISTS "profile_photos_update"          ON storage.objects;
+DROP POLICY IF EXISTS "application_docs_upload_own"    ON storage.objects;
+DROP POLICY IF EXISTS "application_docs_read_own"      ON storage.objects;
+DROP POLICY IF EXISTS "application_docs_delete_own"    ON storage.objects;
+DROP POLICY IF EXISTS "lease_pdfs_read_own"            ON storage.objects;
 
 -- property-photos: public read, authenticated upload/update
 CREATE POLICY "property_photos_read"   ON storage.objects FOR SELECT USING (bucket_id = 'property-photos');
@@ -1286,7 +1324,11 @@ END $$;
 -- ============================================================
 -- 17. INDEXES
 -- ============================================================
-CREATE INDEX IF NOT EXISTS idx_applications_app_id           ON applications(app_id);
+-- FIX #6: Removed idx_applications_app_id — the UNIQUE NOT NULL constraint
+-- on applications.app_id already creates an implicit B-tree index.
+-- A duplicate explicit index wastes storage and adds write overhead.
+-- Also removed the duplicate applications_app_id_unique constraint addition
+-- below for the same reason — the inline UNIQUE in CREATE TABLE is sufficient.
 CREATE INDEX IF NOT EXISTS idx_applications_status           ON applications(status);
 CREATE INDEX IF NOT EXISTS idx_applications_landlord_id      ON applications(landlord_id);
 CREATE INDEX IF NOT EXISTS idx_applications_property_id      ON applications(property_id);
@@ -1299,34 +1341,28 @@ CREATE INDEX IF NOT EXISTS idx_properties_status             ON properties(statu
 CREATE INDEX IF NOT EXISTS idx_email_logs_app_id             ON email_logs(app_id);
 CREATE INDEX IF NOT EXISTS idx_inquiries_property_id         ON inquiries(property_id);
 
--- Uniqueness constraint (idempotent)
-DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'applications_app_id_unique'
-  ) THEN
-    ALTER TABLE applications ADD CONSTRAINT applications_app_id_unique UNIQUE (app_id);
-  END IF;
-END $$;
-
 
 -- ============================================================
 -- 18. SCHEDULED JOBS (pg_cron)
 -- ============================================================
 -- Requires the pg_cron extension. Enable it first:
 --   Supabase → Database → Extensions → search "pg_cron" → Enable
--- Then run this block as a separate query in the SQL Editor.
+-- Then re-run this file (or just this section) to register the job.
 --
--- DO NOT include this block in the same execution as the rest of
--- SETUP.sql unless pg_cron is already enabled — the extension
--- must exist before cron.schedule() can be called.
---
--- The DO block is idempotent: it unschedules the job if it exists
--- before (re)creating it, so this block is safe to re-run after
--- schedule changes.
+-- FIX #1: The block now checks whether pg_cron is enabled before
+-- running. If not enabled it emits a NOTICE and exits gracefully
+-- instead of crashing the entire file run with a missing-table error.
 -- ============================================================
 
 DO $pgcron$
 BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+    RAISE NOTICE 'pg_cron is not enabled — skipping scheduled job setup. '
+      'Enable the pg_cron extension in Supabase → Database → Extensions, '
+      'then re-run this file to register the nightly lease-expiry job.';
+    RETURN;
+  END IF;
+
   -- Remove existing job if present so the schedule can be updated on re-run.
   IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'mark-expired-leases-nightly') THEN
     PERFORM cron.unschedule('mark-expired-leases-nightly');
@@ -1335,6 +1371,7 @@ BEGIN
   -- Run mark_expired_leases() every night at 01:00 UTC.
   -- The function bulk-updates applications where lease_status = 'sent'
   -- and lease_expiry_date < now() → sets lease_status = 'expired'.
+  -- auth.uid() is NULL in cron context, which mark_expired_leases() explicitly allows.
   PERFORM cron.schedule(
     'mark-expired-leases-nightly',
     '0 1 * * *',
