@@ -172,9 +172,13 @@
   <!-- Main column -->
   <div class="detail-main" id="detailMain">
     <div class="detail-breadcrumb">
-      <a href="/index.html">Listings</a>
+      <a href="/listings.html">Listings</a>
       <i class="fas fa-chevron-right" style="font-size:10px"></i>
       <span id="breadcrumbCity">Loading…</span>
+      <span id="breadcrumbTitleGroup" style="display:none">
+        <i class="fas fa-chevron-right" style="font-size:10px"></i>
+        <span id="breadcrumbTitle"></span>
+      </span>
     </div>
 
     <div class="detail-header">
@@ -319,7 +323,8 @@
       </div>
       <div class="contact-form-group">
         <label class="form-label">Message</label>
-        <textarea class="form-textarea" id="inqMessage" rows="3" placeholder="I'm interested in this property and have a few questions…"></textarea>
+        <textarea class="form-textarea" id="inqMessage" rows="3" maxlength="1500" placeholder="I'm interested in this property and have a few questions…"></textarea>
+        <div style="text-align:right;font-size:11px;color:#8892a2;margin-top:4px"><span id="inqCharCount">0</span> / 1500</div>
       </div>
       <button class="btn btn-primary btn-full" id="sendInquiryBtn">
         <i class="fas fa-paper-plane"></i> Send Message
@@ -588,6 +593,9 @@ function renderProperty(p) {
   document.head.appendChild(sd);
 
   document.getElementById('breadcrumbCity').textContent = `${p.city}, ${p.state}`;
+  const bcGroup = document.getElementById('breadcrumbTitleGroup');
+  const bcTitle = document.getElementById('breadcrumbTitle');
+  if (bcTitle && bcGroup) { bcTitle.textContent = p.title; bcGroup.style.display = ''; }
 
   // Gallery
   allPhotos = p.photo_urls?.length ? p.photo_urls : ['/assets/placeholder-property.jpg'];
@@ -625,8 +633,10 @@ function renderProperty(p) {
     </div>`).join('');
 
   const descEl = document.getElementById('detailDesc');
-  descEl.textContent = p.description || 'No additional description provided.';
-  if ((p.description || '').length > 300) {
+  const descText = p.description || 'No additional description provided.';
+  const descParas = descText.split(/\n+/).map(s => s.trim()).filter(Boolean);
+  descEl.innerHTML = descParas.map(s => `<p>${s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>`).join('');
+  if (descText.length > 300) {
     descEl.classList.add('truncated');
     const rmBtn = document.createElement('button');
     rmBtn.className = 'detail-read-more';
@@ -910,11 +920,12 @@ function buildMosaicDots(photos) {
 }
 
 function syncMosaicDots(idx) {
-  const MAX_DOTS = 7;
-  document.querySelectorAll('.mosaic-dot').forEach((dot, i) => {
-    const active = i === (idx >= MAX_DOTS ? MAX_DOTS - 1 : idx);
-    dot.classList.toggle('active', active);
-  });
+  const dots = document.querySelectorAll('.mosaic-dot');
+  const dotCount = dots.length;
+  if (!dotCount) return;
+  const total = allPhotos.length;
+  const dotIdx = total <= dotCount ? idx : Math.round((idx / (total - 1)) * (dotCount - 1));
+  dots.forEach((dot, i) => dot.classList.toggle('active', i === dotIdx));
 }
 
 /* ── Thumbnail Strip ── */
@@ -1141,6 +1152,10 @@ document.getElementById('lightbox').addEventListener('click', e => {
 });
 
 /* ── Inquiry ── */
+document.getElementById('inqMessage').addEventListener('input', function() {
+  document.getElementById('inqCharCount').textContent = this.value.length;
+});
+
 let inquiryCooldown = false;
 document.getElementById('sendInquiryBtn').addEventListener('click', async () => {
   if (inquiryCooldown) { showToast('Please wait before sending another message.', 'info'); return; }
