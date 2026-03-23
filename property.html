@@ -34,7 +34,8 @@
 #mobile-apply-bar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:#0a1628;border-top:1px solid rgba(255,255,255,.12);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -4px 24px rgba(0,0,0,.35)}
 #mobile-apply-bar .mob-price{color:rgba(255,255,255,.65);font-size:.75rem;line-height:1.2}
 #mobile-apply-bar .mob-price strong{display:block;font-size:1.05rem;font-weight:700;color:#fff;letter-spacing:-.01em}
-#mobile-apply-bar .mob-btn{background:linear-gradient(135deg,#c9a84c,#e0b84d);color:#0a1628;border:none;border-radius:6px;padding:12px 22px;font-size:.85rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;white-space:nowrap;cursor:pointer;flex-shrink:0}
+#mobile-apply-bar .mob-btn{background:var(--color-brand);color:#fff;border:none;border-radius:8px;padding:12px 22px;font-size:.875rem;font-weight:700;letter-spacing:-.01em;text-decoration:none;white-space:nowrap;cursor:pointer;flex-shrink:0;box-shadow:0 4px 16px rgba(0,106,255,.35);transition:background 160ms ease,box-shadow 160ms ease}
+#mobile-apply-bar .mob-btn:hover{background:var(--color-brand-hover);box-shadow:0 6px 22px rgba(0,106,255,.45)}
 @media(max-width:767px){#mobile-apply-bar.active{display:flex}body.mob-bar-active{padding-bottom:80px}}
 </style>
 <script src="/config.js"></script>
