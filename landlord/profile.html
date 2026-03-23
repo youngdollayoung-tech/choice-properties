@@ -636,7 +636,6 @@
 
     // Contact row in hero
     const contacts = [];
-    if (l.phone)   contacts.push(`<a href="tel:${l.phone.replace(/\D/g,'')}" class="profile-contact-item"><i class="fas fa-phone"></i>${l.phone}</a>`);
     if (l.website) contacts.push(`<a href="${l.website}" target="_blank" class="profile-contact-item"><i class="fas fa-globe"></i>${l.website.replace(/^https?:\/\//, '')}</a>`);
     document.getElementById('profileContactRow').innerHTML = contacts.join('');
 
@@ -656,7 +655,6 @@
     // Sidebar info rows
     const rows = [];
     if (l.contact_name && l.business_name) rows.push({ icon:'fa-user', label:'Contact', val: l.contact_name });
-    if (l.phone)            rows.push({ icon:'fa-phone', label:'Phone', val: l.phone, href: `tel:${l.phone.replace(/\D/g,'')}` });
     if (l.license_number)   rows.push({ icon:'fa-id-card', label:'License #', val: l.license_number });
     if (l.years_experience) rows.push({ icon:'fa-briefcase', label:'Experience', val: `${l.years_experience} years` });
     const memberSince = new Date(l.created_at).getFullYear();
@@ -686,13 +684,6 @@
       sr.style.display = 'flex';
     }
 
-    // Contact button
-    if (l.phone) {
-      const btn = document.getElementById('contactBtn');
-      btn.href = `tel:${l.phone.replace(/\D/g,'')}`;
-      btn.innerHTML = `<i class="fas fa-phone"></i> Call ${l.contact_name?.split(' ')[0] || 'Now'}`;
-      btn.style.display = 'block';
-    }
   }
 
   function renderStats(l, listings) {

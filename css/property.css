@@ -630,10 +630,8 @@
   background: var(--color-surface-raised); border: 1px solid var(--color-border);
   border-radius: var(--radius-xl); padding: var(--space-4) var(--space-5);
   display: flex; align-items: center; gap: var(--space-3);
-  text-decoration: none; transition: all var(--dur) var(--ease);
   box-shadow: var(--shadow-xs);
 }
-.landlord-card:hover { border-color: rgba(0,106,255,0.22); box-shadow: 0 6px 20px rgba(0,106,255,0.10); transform: translateY(-1px); }
 .landlord-card-avatar {
   width: 50px; height: 50px; border-radius: 50%;
   background: linear-gradient(135deg, var(--color-brand) 0%, #0050CC 100%);
@@ -650,23 +648,6 @@
   color: var(--color-brand); font-size: 18px; flex-shrink: 0; margin-left: auto;
   filter: drop-shadow(0 0 4px rgba(0,106,255,0.25));
 }
-.landlord-card-arrow { color: var(--color-border-strong); font-size: 14px; flex-shrink: 0; transition: color var(--dur) var(--ease), transform var(--dur) var(--ease); }
-.landlord-card:hover .landlord-card-arrow { color: var(--color-brand); transform: translateX(2px); }
-
-/* ── LANDLORD PHONE ROW ───────────────────────────────────── */
-.landlord-phone-row {
-  display: none;
-  align-items: center; gap: var(--space-2);
-  padding: 10px 14px;
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  font-size: 13px; color: var(--color-text-secondary);
-}
-.landlord-phone-row i { color: var(--color-text-muted); font-size: 12px; }
-.landlord-phone-row a { color: var(--color-brand); font-weight: 600; text-decoration: none; transition: color var(--dur) var(--ease); }
-.landlord-phone-row a:hover { color: var(--color-brand-hover); }
-
 /* ── LISTED-BY ATTRIBUTION ────────────────────────────────── */
 .detail-listed-by {
   font-size: 13.5px; color: var(--color-text-muted);
@@ -674,8 +655,7 @@
   display: flex; align-items: center; gap: 6px;
 }
 .detail-listed-by i { color: var(--color-brand); font-size: 11px; }
-.detail-listed-by a { color: var(--color-brand); font-weight: 600; text-decoration: none; transition: color var(--dur) var(--ease); }
-.detail-listed-by a:hover { color: var(--color-brand-hover); }
+.detail-listed-by span { color: var(--color-text-primary); font-weight: 600; }
 
 /* ── CONTACT CARD ─────────────────────────────────────────── */
 .contact-card {

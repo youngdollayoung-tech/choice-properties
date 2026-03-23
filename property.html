@@ -283,7 +283,7 @@
     </div>
 
     <!-- Landlord Profile Card -->
-    <a href="#" class="landlord-card" id="landlordCard" style="display:none;">
+    <div class="landlord-card" id="landlordCard" style="display:none;">
       <div class="landlord-card-avatar" id="landlordAvatar">?</div>
       <div class="landlord-card-info">
         <div class="landlord-card-label">Listed by</div>
@@ -291,12 +291,6 @@
         <div class="landlord-card-tagline" id="landlordTagline"></div>
       </div>
       <i class="fas fa-circle-check landlord-card-verified" id="landlordVerified" style="display:none" title="Verified landlord"></i>
-      <div class="landlord-card-arrow"><i class="fas fa-chevron-right"></i></div>
-    </a>
-    <!-- Landlord phone — shown only when landlord has a phone number on file -->
-    <div id="landlordPhoneRow" class="landlord-phone-row">
-      <i class="fas fa-phone"></i>
-      <a id="landlordPhoneLink" href="#"></a>
     </div>
 
     <!-- Contact Card -->
@@ -469,7 +463,7 @@ async function loadProperty(id) {
   try {
     const { data: prop, error } = await supabase
       .from('properties')
-      .select('*, landlords(id, user_id, business_name, contact_name, phone, email, avatar_url, tagline, verified)')
+      .select('*, landlords(id, user_id, business_name, contact_name, avatar_url, tagline, verified)')
       .eq('id', id)
       .single();
     if (error || !prop) throw new Error('Not found');
@@ -619,7 +613,7 @@ function renderProperty(p) {
     const name = ll.business_name || ll.contact_name;
     const attr = document.createElement('div');
     attr.className = 'detail-listed-by';
-    attr.innerHTML = `<i class="fas fa-user"></i> Listed by <a href="/landlord/profile.html?id=${ll.id}">${name}</a>`;
+    attr.innerHTML = `<i class="fas fa-user"></i> Listed by <span>${name}</span>`;
     document.getElementById('detailAddress').insertAdjacentElement('afterend', attr);
   }
 
@@ -742,22 +736,13 @@ function renderProperty(p) {
     const ll = p.landlords;
     const name = ll.business_name || ll.contact_name;
     const card = document.getElementById('landlordCard');
-    card.href = `/landlord/profile.html?id=${ll.id}`;
     card.style.display = 'flex';
     document.getElementById('landlordName').textContent = name;
     if (ll.tagline) document.getElementById('landlordTagline').textContent = ll.tagline;
-    else document.getElementById('landlordTagline').textContent = 'View profile →';
     const avatarEl = document.getElementById('landlordAvatar');
     if (ll.avatar_url) avatarEl.innerHTML = `<img src="${CONFIG.img(ll.avatar_url,'avatar')}" alt="${name}">`;
     else avatarEl.textContent = name.charAt(0).toUpperCase();
     if (ll.verified) document.getElementById('landlordVerified').style.display = 'inline';
-    if (ll.phone) {
-      const phoneRow  = document.getElementById('landlordPhoneRow');
-      const phoneLink = document.getElementById('landlordPhoneLink');
-      phoneLink.textContent = ll.phone;
-      phoneLink.href = `tel:${ll.phone.replace(/\D/g, '')}`;
-      phoneRow.style.display = 'flex';
-    }
   }
 
   // Apply button — build URL with full property context for form prefill
