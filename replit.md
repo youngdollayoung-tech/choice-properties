@@ -2,34 +2,73 @@
 
 ---
 
-## CRITICAL — READ THIS FIRST BEFORE TAKING ANY ACTION
+## ⛔ MANDATORY RULES FOR ALL AI AGENTS — READ BEFORE ANYTHING ELSE
 
-**This project is a static website. Replit is used as a code editor and live preview only.**
+These rules are absolute. They apply to every session, every import, every task. No exceptions.
 
-| Fact | What it means |
-|------|---------------|
-| Deployment target | **Cloudflare Pages** — not Replit |
-| Backend | **Supabase cloud** — not Replit, not Neon, not any local DB |
-| Database | **Supabase PostgreSQL** (hosted) — no migration tool, no ORM |
-| Replit's role | Code editor + live preview only |
+### This project is:
+- A **static website** deployed to **Cloudflare Pages**
+- Connected to **Supabase cloud** for all backend needs
+- Using Replit **as a code editor only** — nothing more
 
-### YOU MUST NEVER:
-- Connect, configure, or use the Replit PostgreSQL / Neon database
-- Run `db:push`, `db:migrate`, or any database command
+### NEVER do any of the following:
+
+**Database — NEVER:**
+- Connect to or use the Replit/Neon PostgreSQL database
+- Read or use `DATABASE_URL`, `PGHOST`, `PGPASSWORD`, `PGUSER`, `PGDATABASE`, `PGPORT`
+- Run `db:push`, `db:migrate`, `db:pull`, or any database command
 - Install Drizzle, Prisma, Sequelize, or any ORM
-- Create backend files (server routes, schema files, db config, api/ directories)
-- Add backend packages to `package.json`
-- Attempt to "set up the database environment" — the database runs on Supabase cloud
-- Modify `serve.js`, `.replit`, or `generate-config.js` unless explicitly asked
-- Touch any file in `supabase/functions/` unless explicitly asked
+- Create schema files, migration files, or database config files
+- The `.replit` file contains `integrations = ["javascript_database:1.0.0"]` — this is a system artifact that CANNOT be removed. It does NOT mean this project uses a local database. **Ignore it completely and unconditionally.**
 
-### `supabase/functions/` contains Deno code that runs on Supabase cloud — NOT on Replit.
+**Deployment — NEVER:**
+- Deploy to Cloudflare Pages
+- Run `wrangler`, `wrangler pages deploy`, or any Cloudflare CLI command
+- Use the Cloudflare API to trigger a deployment
+- Deployment is always done manually by the user: they push to GitHub and Cloudflare Pages handles it
+
+**Git — NEVER:**
+- Run `git push`, `git commit`, `git merge`, `git rebase`, or any git write operation
+- Create or merge pull requests automatically
+- Your responsibility ends at editing files. The user handles all git operations.
+
+**Backend — NEVER:**
+- Create server routes, API endpoints, or backend server files
+- Add backend packages to `package.json`
+- Create an `api/` directory or backend directory structure
+- Modify `serve.js` or `generate-config.js` unless the user explicitly asks
+- Modify `supabase/functions/` unless the user explicitly asks
+
+**Replit infrastructure — NEVER:**
+- Add `*.replit.dev` or `*.repl.co` domains to any app source file, config, or CSP header
+- Provision or configure any Replit-managed service as part of the app
+
+### ONLY do this:
+Edit static files (HTML, CSS, JS) locally. That is the full scope of your role.
 
 ---
 
 ## Project Overview
 
 Choice Properties is a nationwide rental marketplace — a **static site** served by a lightweight Node.js file server (`serve.js`). All backend logic runs as **Supabase Edge Functions** hosted on Supabase cloud. There is no local database and no ORM.
+
+---
+
+## How Changes Go Live
+
+```
+AI edits files locally in Replit
+         ↓
+User reviews changes
+         ↓
+User pushes to GitHub manually
+         ↓
+Cloudflare Pages auto-deploys
+         ↓
+Live site updates
+```
+
+The AI's job ends after step 1.
 
 ---
 
@@ -55,17 +94,17 @@ See **SETUP.md** for the complete step-by-step new project guide.
 ## Architecture
 
 - **Frontend**: Static HTML/CSS/JS files served from the project root
-- **Server**: `serve.js` — Node.js HTTP server on port 5000 (Replit preview only)
+- **Server**: `serve.js` — Node.js HTTP server on port 5000 (local preview only, not deployed)
 - **Backend API**: Supabase Edge Functions (Deno, hosted on Supabase cloud)
 - **Database**: Supabase Postgres (hosted on Supabase cloud)
 - **Image CDN**: ImageKit
 - **Email relay**: Google Apps Script (GAS) relay for transactional emails
 - **Address autocomplete**: Geoapify
 
-## How serve.js Works (Replit Preview Only)
+## How serve.js Works (Local Preview Only)
 
 On startup, `serve.js`:
-1. Reads Replit environment secrets
+1. Reads environment secrets set in Replit
 2. Regenerates `config.js` with those values so the browser has access to public keys
 3. Starts the HTTP server on port 5000
 
@@ -82,7 +121,7 @@ In production, Cloudflare Pages runs `generate-config.js` as a build step and se
 |------|---------|
 | `SETUP.sql` | **Single authoritative database setup** — run this for any new Supabase project |
 | `SETUP.md` | Complete step-by-step new project setup guide |
-| `serve.js` | Static file server + config.js generator (Replit preview only) |
+| `serve.js` | Static file server + config.js generator (local preview only) |
 | `config.js` | Auto-generated at startup from env secrets (do not edit manually) |
 | `config.example.js` | Template showing all config fields with placeholder values |
 | `generate-config.js` | Cloudflare Pages build-time config generator |
@@ -101,9 +140,9 @@ In production, Cloudflare Pages runs `generate-config.js` as a build step and se
 
 ---
 
-## Environment Secrets (Replit Preview Only)
+## Environment Secrets (Local Preview Only)
 
-Set these in Replit's Secrets panel for the live preview to connect to Supabase:
+Set these in Replit's Secrets panel so the local preview can connect to Supabase:
 
 | Secret | Description |
 |--------|-------------|
@@ -127,7 +166,7 @@ Set these in Replit's Secrets panel for the live preview to connect to Supabase:
 | `FEATURE_MESSAGING` | Enable messaging (default: true) |
 | `FEATURE_REALTIME_UPDATES` | Enable realtime (default: true) |
 
-**Supabase Edge Function secrets** (set in Supabase → Settings → Edge Functions, NOT in Replit):
+**Supabase Edge Function secrets** (set in Supabase → Settings → Edge Functions, NOT here):
 - `GAS_EMAIL_URL` — Google Apps Script email relay URL
 - `GAS_RELAY_SECRET` — Secret token for GAS relay authentication
 - `IMAGEKIT_PRIVATE_KEY` — ImageKit private key (never expose to browser)

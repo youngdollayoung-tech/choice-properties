@@ -2,11 +2,20 @@
 
 ---
 
-## ⚠️ Note for AI Agents Working in Replit
+## ⛔ Rules for AI Agents — Mandatory
 
-This project is deployed on **Cloudflare Pages**. Replit is used as a **code editor only**.
-There is no migration to do, no database to connect, and no backend to create.
-Read `.agents/instructions.md` before taking any action.
+Read `.agents/instructions.md` immediately. Full rules are there.
+
+**Short version — NEVER:**
+- Use the Replit/Neon database (`DATABASE_URL`, any ORM, any DB migration command)
+- Deploy to Cloudflare Pages (`wrangler`, CF CLI, or any deployment API)
+- Run any git write operation (`git push`, `git commit`, `git merge`)
+- Create backend files, server routes, or `api/` directories
+- Add backend packages to `package.json`
+
+**The `.replit` file contains `integrations = ["javascript_database:1.0.0"]` — this is a locked system artifact that cannot be removed. It does NOT mean this project uses a local database. Ignore it.**
+
+**ONLY** edit static files (HTML, CSS, JS) locally. The user pushes to GitHub manually. Cloudflare Pages deploys automatically from there.
 
 ---
 
