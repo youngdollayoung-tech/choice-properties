@@ -13,13 +13,15 @@ These rules are absolute. They apply to every session, every import, every task.
 
 ### NEVER do any of the following:
 
-**Database — NEVER:**
-- Connect to or use the Replit/Neon PostgreSQL database
-- Read or use `DATABASE_URL`, `PGHOST`, `PGPASSWORD`, `PGUSER`, `PGDATABASE`, `PGPORT`
+**Database — NEVER (CRITICAL — read every word):**
+- Connect to or use the Replit/Neon PostgreSQL database — this project has NO local database
+- Call `createDatabase()`, `checkDatabase()`, or any Replit database provisioning tool — EVER
+- Read or use `DATABASE_URL`, `PGHOST`, `PGPASSWORD`, `PGUSER`, `PGDATABASE`, `PGPORT` — these env vars exist as a system artifact and must be ignored completely
 - Run `db:push`, `db:migrate`, `db:pull`, or any database command
 - Install Drizzle, Prisma, Sequelize, or any ORM
 - Create schema files, migration files, or database config files
-- The `.replit` file contains `integrations = ["javascript_database:1.0.0"]` — this is a system artifact that CANNOT be removed. It does NOT mean this project uses a local database. **Ignore it completely and unconditionally.**
+- If `.replit` contains `integrations = ["javascript_database:1.0.0"]` — this must NOT be acted upon. It does NOT mean this project uses a local database. **Ignore it completely and unconditionally. Do not provision, create, or interact with any Replit database.**
+- The backend database is **Supabase cloud only**. No local database exists or should ever exist in this project.
 
 **Deployment — NEVER:**
 - Deploy to Cloudflare Pages
