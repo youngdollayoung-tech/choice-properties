@@ -123,8 +123,6 @@
   <button class="mosaic-nav-btn prev" id="mosaicPrev"><i class="fas fa-chevron-left"></i></button>
   <button class="mosaic-nav-btn next" id="mosaicNext"><i class="fas fa-chevron-right"></i></button>
   <div class="mosaic-mobile-count" id="mosaicMobileCount">1 / 1</div>
-  <!-- Mobile dot indicators (shown on ≤768 px) -->
-  <div class="mosaic-dots" id="mosaicDots"></div>
 
   <!-- Legacy galleryExpand kept for JS compatibility -->
   <button id="galleryExpand" style="display:none"></button>
@@ -895,7 +893,6 @@ function renderGallery(photos) {
   expandBtn.addEventListener('click', () => openLightbox(0));
 
   if (mobileCount) mobileCount.textContent = `1 / ${photos.length}`;
-  buildMosaicDots(photos);
   prevBtn.addEventListener('click', () => showPhoto((photoIndex - 1 + photos.length) % photos.length));
   nextBtn.addEventListener('click', () => showPhoto((photoIndex + 1) % photos.length));
 
@@ -927,31 +924,6 @@ function renderGallery(photos) {
 
   // Build thumbnail strip
   buildGalleryStrip(photos);
-}
-
-/* ── Mosaic Dot Indicators ── */
-function buildMosaicDots(photos) {
-  const dotsEl = document.getElementById('mosaicDots');
-  if (!dotsEl) return;
-  // Cap at 7 visible dots to avoid clutter on large photo sets
-  const MAX_DOTS = 7;
-  const count = Math.min(photos.length, MAX_DOTS);
-  if (count < 2) { dotsEl.style.display = 'none'; return; }
-  dotsEl.innerHTML = Array.from({ length: count }, (_, i) =>
-    `<button class="mosaic-dot${i === 0 ? ' active' : ''}" data-idx="${i}" aria-label="Photo ${i + 1}"></button>`
-  ).join('');
-  dotsEl.querySelectorAll('.mosaic-dot').forEach(btn => {
-    btn.addEventListener('click', () => showPhoto(parseInt(btn.dataset.idx)));
-  });
-}
-
-function syncMosaicDots(idx) {
-  const dots = document.querySelectorAll('.mosaic-dot');
-  const dotCount = dots.length;
-  if (!dotCount) return;
-  const total = allPhotos.length;
-  const dotIdx = total <= dotCount ? idx : Math.round((idx / (total - 1)) * (dotCount - 1));
-  dots.forEach((dot, i) => dot.classList.toggle('active', i === dotIdx));
 }
 
 /* ── Thumbnail Strip ── */
@@ -1003,7 +975,6 @@ function showPhoto(idx) {
   const mobileCount = document.getElementById('mosaicMobileCount');
   if (mobileCount) mobileCount.textContent = `${idx + 1} / ${allPhotos.length}`;
   syncStripActive(idx);
-  syncMosaicDots(idx);
 }
 
 /* ── Lightbox ── */

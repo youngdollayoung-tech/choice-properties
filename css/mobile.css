@@ -598,7 +598,6 @@ textarea {
   }
   .property-card:hover::before { opacity: 0; }
   .property-card:hover .property-card-nav { opacity: 0; }
-  .property-card:hover .property-card-dots { opacity: 0; }
   .property-card:hover .property-card-slide img { transform: none; }
   .property-card-apply:hover { transform: none; box-shadow: 0 2px 10px rgba(0,106,255,0.22); }
   .property-card-view:hover { background: var(--color-surface-subtle); border-color: var(--color-border); color: var(--color-text-secondary); }

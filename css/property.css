@@ -152,10 +152,6 @@
 /* Mobile counter — hidden */
 .mosaic-mobile-count { display: none !important; }
 
-/* Dot indicators — hidden */
-.mosaic-dots { display: none !important; }
-.mosaic-dot  { display: none !important; }
-
 #galleryExpand { display: none; }
 
 /* ── GALLERY THUMBNAIL STRIP ─────────────────────────────── */

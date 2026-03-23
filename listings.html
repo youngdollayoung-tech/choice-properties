@@ -617,7 +617,6 @@ function buildCard(p) {
     badge = `<div class="property-card-badge badge-available"><i class="fas fa-calendar"></i> Avail. ${availLabel}</div>`;
   }
   const photoCountHtml = photos.length > 1 ? `<div class="property-card-photo-count"><i class="fas fa-camera"></i> ${photos.length}</div>` : '';
-  const dotsHtml = photos.length > 1 ? photos.slice(0, 8).map((_, i) => `<button class="property-card-dot${i === 0 ? ' active' : ''}" data-idx="${i}" aria-label="Photo ${i + 1}"></button>`).join('') : '';
 
   return `
     <article class="property-card" data-id="${p.id}">
@@ -629,7 +628,6 @@ function buildCard(p) {
             <button class="property-card-nav next" data-dir="1"  aria-label="Next photo"><i class="fas fa-chevron-right"></i></button>
           ` : ''}
           ${badge}
-          ${dotsHtml ? `<div class="property-card-dots">${dotsHtml}</div>` : ''}
           ${photoCountHtml}
         </div>
       </a>
@@ -668,7 +666,6 @@ function animateCards() {
 /* ─── Carousel ─── */
 function initCarousel(card) {
   const slides  = card.querySelector('.property-card-slides');
-  const dots    = card.querySelectorAll('.property-card-dot');
   const navBtns = card.querySelectorAll('.property-card-nav');
   if (!slides || !navBtns.length) return;
   let idx = 0;
@@ -676,13 +673,9 @@ function initCarousel(card) {
   function goTo(n) {
     idx = (n + total) % total;
     slides.style.transform = `translateX(-${idx * 100}%)`;
-    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
   }
   navBtns.forEach(btn => {
     btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); goTo(idx + parseInt(btn.dataset.dir)); });
-  });
-  dots.forEach(dot => {
-    dot.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); goTo(parseInt(dot.dataset.idx)); });
   });
   let touchX = 0;
   slides.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
