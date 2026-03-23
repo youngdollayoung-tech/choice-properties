@@ -202,16 +202,33 @@
   // Check for deep-link highlight from dashboard
   const highlightId = new URLSearchParams(location.search).get('highlight');
 
-  // Load applications for this landlord
-  const { data, error } = await CP.sb()
+  // Load applications for this landlord.
+  // We first fetch property IDs owned by this landlord so we can also surface
+  // applications where landlord_id was not resolved at submission time (e.g., the
+  // property existed but its landlord_id field was null at the time of submission).
+  // The RLS policy (applications_landlord_read) mirrors this OR logic server-side.
+  const { data: propRows } = await CP.sb()
+    .from('properties')
+    .select('id')
+    .eq('landlord_id', profile.id);
+  const propIds = (propRows || []).map(p => p.id);
+
+  let appQuery = CP.sb()
     .from('applications')
     .select('app_id,created_at,status,payment_status,lease_status,first_name,last_name,email,phone,property_address,property_id,admin_notes,monthly_rent')
-    .eq('landlord_id', profile.id)
     .order('created_at', { ascending: false });
+
+  if (propIds.length > 0) {
+    appQuery = appQuery.or(`landlord_id.eq.${profile.id},property_id.in.(${propIds.join(',')})`);
+  } else {
+    appQuery = appQuery.eq('landlord_id', profile.id);
+  }
+
+  const { data, error } = await appQuery;
 
   if (error) {
     document.getElementById('appsContainer').innerHTML =
-      '<div style="text-align:center;padding:40px;color:red">Failed to load applications.</div>';
+      '<div style="text-align:center;padding:40px;color:red">Failed to load applications. Please refresh the page.</div>';
   } else {
     allApps = data || [];
     renderStats(allApps);
@@ -409,9 +426,14 @@
     document.getElementById('detail-modal').classList.add('open');
 
     const { data: a, error } = await CP.Applications.getOne(appId);
-    if (error || !a) {
+    if (error) {
       document.getElementById('detail-modal-body').innerHTML =
         '<div style="color:#991b1b;padding:20px">Failed to load application. Please try again.</div>';
+      return;
+    }
+    if (!a) {
+      document.getElementById('detail-modal-body').innerHTML =
+        '<div style="color:#991b1b;padding:20px">This application could not be found or you do not have access to it. If you believe this is an error, please contact support and reference application ID <strong>' + CP_esc(appId) + '</strong>.</div>';
       return;
     }
 

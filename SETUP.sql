@@ -602,9 +602,16 @@ CREATE POLICY "inquiries_landlord_update" ON inquiries
 
 -- applications
 CREATE POLICY "applications_admin_all" ON applications FOR ALL USING (is_admin());
+-- FIX #12: Also allow landlords to read applications linked to their properties via property_id,
+-- covering the case where landlord_id was not populated at submission time (e.g., edge function
+-- resolved property_id but the property had no landlord_id set, or property_id was absent).
 CREATE POLICY "applications_landlord_read" ON applications
   FOR SELECT USING (
     landlord_id = (SELECT id FROM landlords WHERE user_id = auth.uid())
+    OR property_id IN (
+      SELECT id FROM properties
+      WHERE landlord_id = (SELECT id FROM landlords WHERE user_id = auth.uid())
+    )
   );
 -- Authenticated applicants can read their own applications
 CREATE POLICY "applications_applicant_read" ON applications
@@ -618,11 +625,17 @@ CREATE POLICY "applications_applicant_read" ON applications
 
 -- messages
 CREATE POLICY "messages_admin_all" ON messages FOR ALL USING (is_admin());
+-- FIX #12: Mirror the applications_landlord_read fallback — also allow messages on
+-- applications linked via property_id when landlord_id was not resolved at submission.
 CREATE POLICY "messages_landlord_read" ON messages
   FOR SELECT USING (
     app_id IN (
       SELECT app_id FROM applications
       WHERE landlord_id = (SELECT id FROM landlords WHERE user_id = auth.uid())
+         OR property_id IN (
+              SELECT id FROM properties
+              WHERE landlord_id = (SELECT id FROM landlords WHERE user_id = auth.uid())
+            )
     )
   );
 

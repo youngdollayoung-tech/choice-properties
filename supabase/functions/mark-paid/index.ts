@@ -26,15 +26,29 @@ Deno.serve(async (req) => {
 
     const { data: app, error: fetchErr } = await supabase
       .from('applications')
-      .select('email,first_name,last_name,phone,preferred_language,landlord_id')
+      .select('email,first_name,last_name,phone,preferred_language,landlord_id,property_id')
       .eq('app_id', app_id)
-      .single()
+      .maybeSingle()
     if (fetchErr) throw new Error(fetchErr.message)
+    if (!app) throw new Error('Application not found')
 
-    // If not admin, verify caller is the landlord who owns this application
+    // If not admin, verify caller is the landlord who owns this application.
+    // Fall back to property ownership when landlord_id was not resolved at submission time.
     if (!isAdmin) {
       const { data: landlordRow } = await supabase.from('landlords').select('id').eq('user_id', user.id).maybeSingle()
-      if (!landlordRow || landlordRow.id !== app.landlord_id) {
+      if (!landlordRow) {
+        return new Response(JSON.stringify({ success: false, error: 'Forbidden' }), { status: 403, headers: { ...cors, 'Content-Type': 'application/json' } })
+      }
+      let hasAccess = landlordRow.id === app.landlord_id
+      if (!hasAccess && app.property_id) {
+        const { data: propCheck } = await supabase
+          .from('properties')
+          .select('landlord_id')
+          .eq('id', app.property_id)
+          .maybeSingle()
+        hasAccess = propCheck?.landlord_id === landlordRow.id
+      }
+      if (!hasAccess) {
         return new Response(JSON.stringify({ success: false, error: 'Forbidden' }), { status: 403, headers: { ...cors, 'Content-Type': 'application/json' } })
       }
     }

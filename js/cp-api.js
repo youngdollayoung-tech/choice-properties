@@ -121,7 +121,7 @@ const Applications = {
     return { data: data || [], error };
   },
   async getOne(appId)           {
-    const { data, error } = await sb().from('applications').select('*').eq('app_id', appId).single();
+    const { data, error } = await sb().from('applications').select('*').eq('app_id', appId).maybeSingle();
     return { data, error };
   },
   async updateStatus(appId, status, notes)  { return callEdgeFunction('update-status', { app_id: appId, status, notes }); },

@@ -34,14 +34,27 @@ Deno.serve(async (req) => {
     const { app_id, message, sender, sender_name } = await req.json()
     if (!app_id || !message) throw new Error('app_id and message required')
 
-    // Landlords may only message applicants on their own properties
+    // Landlords may only message applicants on their own properties.
+    // Check landlord_id first; fall back to property ownership for apps where landlord_id was not resolved at submission time.
     if (!isAdmin && isLandlord) {
       const { data: appCheck } = await supabase
         .from('applications')
-        .select('landlord_id')
+        .select('landlord_id, property_id')
         .eq('app_id', app_id)
-        .single()
-      if (!appCheck || appCheck.landlord_id !== landlordRow!.id) {
+        .maybeSingle()
+      if (!appCheck) {
+        return new Response(JSON.stringify({ success: false, error: 'Application not found' }), { status: 404, headers: { ...cors, 'Content-Type': 'application/json' } })
+      }
+      let hasAccess = appCheck.landlord_id === landlordRow!.id
+      if (!hasAccess && appCheck.property_id) {
+        const { data: propCheck } = await supabase
+          .from('properties')
+          .select('landlord_id')
+          .eq('id', appCheck.property_id)
+          .maybeSingle()
+        hasAccess = propCheck?.landlord_id === landlordRow!.id
+      }
+      if (!hasAccess) {
         return new Response(JSON.stringify({ success: false, error: 'Forbidden — not your property' }), { status: 403, headers: { ...cors, 'Content-Type': 'application/json' } })
       }
     }
