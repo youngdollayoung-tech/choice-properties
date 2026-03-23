@@ -43,8 +43,55 @@ These rules are absolute. They apply to every session, every import, every task.
 - Add `*.replit.dev` or `*.repl.co` domains to any app source file, config, or CSP header
 - Provision or configure any Replit-managed service as part of the app
 
+**Authentication — NEVER (critical rule, read carefully):**
+- Assume email confirmation is required or enabled for any user type
+- Add email verification gates, confirmation screens, or "check your email" flows for landlords, agents, or admins
+- Suggest enabling Supabase email confirmation for landlords, agents, or admins
+- Add `emailRedirectTo`, OTP flows, or magic-link flows for landlord/admin sign-up or sign-in
+- Treat `data.session === null` after `auth.signUp()` as a valid or expected landlord/admin state — if session is null after landlord signup, it is a bug, not a design choice
+
 ### ONLY do this:
 Edit static files (HTML, CSS, JS) locally. That is the full scope of your role.
+
+---
+
+## ⚠️ AUTHENTICATION GROUND TRUTH — MANDATORY FOR ALL AI ACTIONS
+
+This section defines the exact, current, enforced authentication model. Every code change, every suggestion, every review must be consistent with these rules. Do not deviate.
+
+### Email Confirmation: DISABLED for all landlord and admin accounts
+
+**Supabase Auth setting:** `Confirm email` is **OFF**.
+
+This means:
+- `supabase.auth.signUp()` for a landlord returns `{ user, session }` immediately — **session is always non-null on success**
+- The landlord profile INSERT into `landlords` happens in the same call, in the same authenticated context
+- There is no confirmation email step, no "check your inbox" screen, and no pending-confirmation state for landlords or admins
+- If session is null after signUp, it is an error — surface it immediately, do not treat it as a normal flow
+
+### Three distinct user types — never conflate them
+
+| User Type | Auth Method | Email Confirmation | Session after signUp |
+|-----------|-------------|-------------------|----------------------|
+| **Landlord / Agent** | Email + Password | **DISABLED** | Immediate |
+| **Admin** | Email + Password | **DISABLED** | Immediate (must also exist in `admin_roles`) |
+| **Applicant / Tenant** | OTP (passwordless) | N/A — OTP is stateless | After OTP verify only |
+
+### What this means for the RLS policies
+
+The `landlords_own_write` policy is:
+```sql
+USING (user_id = auth.uid())
+```
+This works correctly because landlord signUp always returns a live session, so `auth.uid()` is never null at the time of the `landlords` INSERT.
+
+### Future email confirmation
+
+If email confirmation is ever re-enabled for landlords or admins, the `signUp()` flow in `js/cp-api.js` **must be restructured** — the landlord INSERT cannot happen at signUp time without a live session. This would require a Supabase Auth database trigger or a deferred insert on first login. Do not re-enable email confirmation without also addressing this architectural dependency.
+
+### Applicant OTP is unaffected
+
+Applicants (`/apply/`) use a completely separate passwordless OTP flow (`supabase.auth.signInWithOtp()`). This is unrelated to the landlord/admin email confirmation setting and must never be changed to email+password.
 
 ---
 
@@ -83,9 +130,10 @@ Paste the entire file into Supabase → SQL Editor → New query → Run.
 That is the only file needed. It includes the complete schema, all security patches, all RLS policies, all functions, views, storage configuration, and indexes. Do not run SCHEMA.sql, SECURITY-PATCHES.sql, APPLICANT-AUTH.sql, or phase4-patches.sql — those are legacy files kept for reference only.
 
 After running SETUP.sql:
-1. Enable Email OTP in Supabase → Authentication → Providers → Email
-2. Add your admin: `INSERT INTO admin_roles (user_id, email) VALUES ('uid', 'email');`
-3. Set Edge Function secrets (see SETUP.md for the full list)
+1. **Disable email confirmation**: Supabase → Authentication → Providers → Email → toggle **"Confirm email" OFF**
+2. **Enable Email OTP** (for applicants only): Supabase → Authentication → Providers → Email → enable OTP
+3. Add your admin: `INSERT INTO admin_roles (user_id, email) VALUES ('uid', 'email');`
+4. Set Edge Function secrets (see SETUP.md for the full list)
 
 See **SETUP.md** for the complete step-by-step new project guide.
 
@@ -228,12 +276,15 @@ All deployed to Supabase cloud — not run locally:
 | `get_lease_financials(app_id, last_name)` | anon/auth | Returns financial terms + sign token (last-name gated) |
 | `get_my_applications()` | authenticated | Returns all apps linked to the current user |
 | `claim_application(app_id, email)` | authenticated | Links legacy app to a Supabase Auth account |
-| `get_apps_by_email(email)` | anon/auth | Returns app IDs for email recovery |
+| `get_apps_by_email(email)` | **authenticated only** | Returns app IDs for email recovery (restricted — PII) |
+| `get_app_id_by_email(email)` | **authenticated only** | Returns most recent app_id for email (restricted — PII) |
 | `submit_tenant_reply(app_id, msg, name)` | anon/auth | Inserts a tenant reply message |
 | `sign_lease(app_id, signature, ip)` | authenticated | Primary applicant lease signing (token verified by Edge Function) |
 | `sign_lease_co_applicant(app_id, sig, ip)` | authenticated | Co-applicant signing |
-| `mark_expired_leases()` | authenticated | Bulk-marks stale sent leases as expired |
+| `mark_expired_leases()` | admin or cron only | Bulk-marks stale sent leases as expired |
 | `generate_property_id()` | authenticated | Generates PROP-XXXXXXXX IDs server-side |
+| `generate_app_id()` | authenticated | Generates CP-YYYYMMDD-XXXXXXNNN IDs server-side |
+| `increment_counter(table, id, col)` | anon/auth | Increments property view counts (properties.views_count only) |
 
 ---
 
