@@ -34,3 +34,9 @@ waitForPort = 5000
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[userenv]
+
+[userenv.shared]
+SUPABASE_URL = "https://iewaqmgoetlpvtwluhdy.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlld2FxbWdvZXRscHZ0d2x1aGR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjg2NDksImV4cCI6MjA4OTgwNDY0OX0.9fFYkS5U6PgS-abWfS6GY4VrP54Eqy3HQ-hgfzuDFwU"
