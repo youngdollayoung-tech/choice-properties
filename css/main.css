@@ -6,7 +6,7 @@
    ============================================================ */
 
 /* ── Unified font: Inter replaces Sora + Manrope ───────────── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+/* Inter font loaded via <link> in each page's <head> for performance */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html {
