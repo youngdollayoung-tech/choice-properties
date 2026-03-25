@@ -446,7 +446,8 @@ button { font-family: var(--font-body); }
 .nav-drawer { position: fixed; top: 0; right: -100%; bottom: 0; width: min(320px,88vw); background: var(--white); z-index: var(--z-nav); display: flex; flex-direction: column; transition: right var(--dur-slow) var(--ease-out); box-shadow: var(--sh-xl); }
 .nav-drawer.open { right: 0; }
 .nav-drawer-header { display: flex; align-items: center; justify-content: space-between; padding: var(--s-5) var(--s-6); border-bottom: 1px solid var(--border); }
-.nav-drawer-close { background: var(--surface); border: none; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--gray-500); cursor: pointer; }
+.nav-drawer-close { background: var(--surface); border: none; width: 44px; height: 44px; min-width: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; color: var(--gray-500); cursor: pointer; transition: background 150ms ease, color 150ms ease; }
+.nav-drawer-close:hover { background: var(--surface-alt); color: var(--ink); }
 .nav-drawer-body { padding: var(--s-4) var(--s-3); flex: 1; overflow-y: auto; }
 .nav-drawer-link { display: flex; align-items: center; gap: var(--s-3); padding: 11px var(--s-3); border-radius: var(--r-lg); font-size: 14.5px; font-weight: 500; color: var(--gray-700); transition: all var(--dur) var(--ease); }
 .nav-drawer-link:hover { background: var(--surface-alt); color: var(--ink); }

@@ -19,11 +19,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="/css/main.css?v=3">
   <link rel="stylesheet" href="/css/listings.css?v=6">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <link rel="stylesheet" href="/css/mobile.css?v=4">
 <script src="/config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script type="module" src="/js/cp-api.js"></script>
 <style>
 .listings-page-header {
@@ -158,7 +159,7 @@
       <a href="#" class="nav-link nav-link--landlord" id="navAuthLink">For Landlords</a>
     </div>
 
-    <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Open menu">
+    <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Open menu" aria-expanded="false" aria-controls="navDrawer">
       <i class="fas fa-bars"></i>
     </button>
   </div>
@@ -641,6 +642,10 @@ function buildCard(p) {
         <div class="property-card-addr"><i class="fas fa-location-dot"></i>${addrLine}</div>
         ${tags.length ? `<div class="property-card-tags">${tags.join('')}</div>` : ''}
       </div>
+      <div class="property-card-footer">
+        <a href="/property.html?id=${p.id}" class="property-card-view">View Details</a>
+        <a href="${applyURL}" class="property-card-cta" onclick="window.trackApply && window.trackApply('${esc(p.id)}')">Apply Now <i class="fas fa-arrow-right"></i></a>
+      </div>
     </article>`;
 }
 
@@ -829,11 +834,25 @@ function setupMobileDrawer() {
   const drawer = document.getElementById('navDrawer');
   const overlay = document.getElementById('drawerOverlay');
   const close = document.getElementById('drawerClose');
-  const openDrawer = () => { overlay.classList.add('visible'); setTimeout(() => { overlay.classList.add('open'); drawer.classList.add('open'); }, 10); document.body.style.overflow = 'hidden'; };
-  const closeDrawer = () => { overlay.classList.remove('open'); drawer.classList.remove('open'); document.body.style.overflow = ''; setTimeout(() => { overlay.classList.remove('visible'); }, 360); };
+  const openDrawer = () => {
+    overlay.classList.add('visible');
+    setTimeout(() => { overlay.classList.add('open'); drawer.classList.add('open'); }, 10);
+    document.body.style.overflow = 'hidden';
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.setAttribute('aria-label', 'Close menu');
+  };
+  const closeDrawer = () => {
+    overlay.classList.remove('open');
+    drawer.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(() => { overlay.classList.remove('visible'); }, 360);
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Open menu');
+  };
   toggle.addEventListener('click', openDrawer);
   close.addEventListener('click', closeDrawer);
   overlay.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawer.classList.contains('open')) closeDrawer(); });
 }
 
 /* ─── Nav scroll ─── */

@@ -483,16 +483,52 @@
 .property-card-tag.tag-parking  { background: rgba(0,106,255,0.08);  color: #1d4ed8; border-color: rgba(0,106,255,0.22); }
 .property-card-tag.tag-utilities { background: rgba(5,150,105,0.09); color: #065f46; border-color: rgba(5,150,105,0.24); }
 
-/* Full-width Apply Now — gradient CTA */
+/* Card footer — two-button row (View Details + Apply Now) */
+.property-card-footer {
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+  padding: 0 14px 14px;
+}
+
+/* "View Details" — outlined secondary button */
+.property-card-view {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 8px;
+  border: 1.5px solid var(--color-border-strong, #d1d5db);
+  border-radius: 100px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #6b7280);
+  text-decoration: none;
+  font-family: var(--font-base);
+  background: transparent;
+  transition: all 200ms ease;
+  white-space: nowrap;
+}
+.property-card-view:hover {
+  border-color: var(--color-text-primary, #111827);
+  color: var(--color-text-primary, #111827);
+  background: var(--color-surface-subtle, #f9fafb);
+}
+
+/* "Apply Now" — gradient primary CTA */
 .property-card-cta {
+  flex: 1.6;
   display: flex; align-items: center; justify-content: center; gap: 7px;
-  margin-top: auto; padding: 12px 16px;
+  min-height: 44px;
+  margin-top: 0; padding: 10px 12px;
   background: linear-gradient(135deg, #006aff 0%, #0052d4 100%);
   color: #fff;
-  border-radius: 100px; font-size: 13px; font-weight: 700;
+  border-radius: 100px; font-size: 12.5px; font-weight: 700;
   text-decoration: none; font-family: var(--font-base); letter-spacing: 0.02em;
   transition: all 260ms cubic-bezier(0.22,1,0.36,1);
   box-shadow: 0 3px 14px rgba(0,106,255,0.32), 0 1px 3px rgba(0,82,212,0.20);
+  white-space: nowrap;
 }
 .property-card-cta:hover {
   background: linear-gradient(135deg, #0078ff 0%, #0060f0 100%);
@@ -501,6 +537,11 @@
 }
 .property-card-cta i { font-size: 10px; transition: transform 220ms ease; }
 .property-card-cta:hover i { transform: translateX(2px); }
+
+@media (hover: none) {
+  .property-card-cta:hover { transform: none; }
+  .property-card-view:hover { background: transparent; }
+}
 
 /* Glass badges on dark card images */
 .badge-new   { background: var(--color-ink);              color: var(--color-brand-light); }
