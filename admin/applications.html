@@ -340,11 +340,7 @@ function openLeaseModal(appId, name, resend, prefillRent, prefillDeposit, prefil
 
 async function voidLease(appId) {
   if (!await CP.UI.cpConfirm(`Void the lease for application <strong>${appId}</strong>?<br><br>This cannot be undone. The tenant will see "Lease Voided" when they open their link and must be contacted manually.`, { confirmLabel: 'Void Lease', cancelLabel: 'Keep Lease', danger: true })) return;
-  const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/sign-lease`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${(await CP.Auth.getSession())?.access_token || CONFIG.SUPABASE_ANON_KEY}` },
-    body: JSON.stringify({ action: 'void', app_id: appId })
-  }).then(r => r.json());
+  const res = await callEdgeFunction('sign-lease', { action: 'void', app_id: appId });
   if (res.success) { CP.UI.toast('Lease voided.', 'success'); await loadApps(); }
   else CP.UI.toast('Error: ' + res.error, 'error');
 }

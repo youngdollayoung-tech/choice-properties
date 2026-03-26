@@ -111,14 +111,18 @@ const Applications = {
     return result;
   },
   async getAll(filters = {})    {
-    let q = sb().from('admin_application_view').select('*').order('created_at', { ascending: false });
+    const page    = filters.page    || 0;
+    const perPage = filters.perPage || 250;
+    let q = sb().from('admin_application_view').select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(page * perPage, (page + 1) * perPage - 1);
     if (filters.status)         q = q.eq('status', filters.status);
     if (filters.landlord_id)    q = q.eq('landlord_id', filters.landlord_id);
     if (filters.search) {
       q = q.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%,app_id.ilike.%${filters.search}%`);
     }
-    const { data, error } = await q;
-    return { data: data || [], error };
+    const { data, error, count } = await q;
+    return { data: data || [], error, count: count || 0, page, perPage };
   },
   async getOne(appId)           {
     const { data, error } = await sb().from('applications').select('*').eq('app_id', appId).maybeSingle();
@@ -180,10 +184,18 @@ const Properties = {
 // ── Inquiries API ─────────────────────────────────────────
 const Inquiries = {
   async submit(payload)       {
+    // Client-side throttle: max 1 inquiry per 60 s per browser session.
+    // The send-inquiry Edge Function enforces a stricter server-side IP rate limit
+    // (5 per 5 min), so this is just a fast-path guard for accidental double-submits.
+    const THROTTLE_KEY = 'cp_inquiry_last';
+    const last = parseInt(localStorage.getItem(THROTTLE_KEY) || '0', 10);
+    if (Date.now() - last < 60000) {
+      return { data: null, error: { message: 'Please wait a moment before sending another inquiry.' } };
+    }
     const { data, error } = await sb().from('inquiries').insert(payload).select().single();
-    // Email notification is now handled server-side by the send-inquiry Edge Function.
-    // The GAS relay secret is never exposed to the browser.
     if (!error && data) {
+      localStorage.setItem(THROTTLE_KEY, String(Date.now()));
+      // Email notification handled server-side — GAS relay secret never exposed to browser.
       callEdgeFunction('send-inquiry', {
         inquiry_id: data.id,
         tenant_name: payload.tenant_name,
