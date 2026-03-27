@@ -1,14 +1,33 @@
 /**
  * Fetches real rental listings from Redfin's public search endpoint (no API key needed)
  * and upserts them into Supabase as single-family / townhouse properties.
- * 
+ *
+ * Photos are automatically uploaded to ImageKit so they are permanently hosted
+ * on your own CDN instead of pointing to Redfin's hotlink-blocked URLs.
+ *
+ * Required env vars:
+ *   SUPABASE_URL          — your Supabase project URL
+ *   SUPABASE_SERVICE_KEY  — service role key (bypass RLS)
+ *   IMAGEKIT_PRIVATE_KEY  — ImageKit private key (for photo upload)
+ *
  * Run: node scripts/fetch_properties.js
  */
 
 const https = require('https');
+const { canUseImageKit, uploadPhotosToImageKit } = require('./imagekit-helper');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
+
+if (!SUPABASE_URL || !SERVICE_KEY) {
+  console.error('✗ SUPABASE_URL and SUPABASE_SERVICE_KEY env vars are required.');
+  process.exit(1);
+}
+
+if (!canUseImageKit()) {
+  console.warn('⚠  IMAGEKIT_PRIVATE_KEY / IMAGEKIT_URL_ENDPOINT not set.');
+  console.warn('   Photos will be skipped. Set both env vars to enable photo upload.\n');
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -63,7 +82,6 @@ function supabasePost(endpoint, body) {
 }
 
 // ── Redfin Rental Search ──────────────────────────────────────────────────────
-// Uses Redfin's internal CSV/JSON endpoint – publicly accessible, no auth needed
 
 async function fetchRedfinRentals(city, state, maxResults = 50) {
   const regionUrl = `https://www.redfin.com/stingray/do/location-autocomplete?location=${encodeURIComponent(city + ', ' + state)}&v=2`;
@@ -72,7 +90,6 @@ async function fetchRedfinRentals(city, state, maxResults = 50) {
   let regionId, regionType;
   try {
     const region = await httpGet(regionUrl);
-    // Redfin returns "{}&&[...]" – strip the prefix
     const cleaned = typeof region === 'string' ? region.replace(/^[^[{]*/, '') : JSON.stringify(region);
     const parsed  = JSON.parse(cleaned);
     const payload = parsed.payload || parsed;
@@ -90,15 +107,14 @@ async function fetchRedfinRentals(city, state, maxResults = 50) {
 
   console.log(`  Region: ${regionId} type:${regionType}`);
 
-  // Redfin rental search: propertyType 3=single-family, 4=townhouse, 6=multifamily
   const searchUrl = [
     'https://www.redfin.com/stingray/api/gis-csv?',
     `al=1&market=national&min_listing_approx_size=500`,
     `&num_homes=${maxResults}`,
     `&ord=days-on-redfin-asc&page_number=1`,
-    `&property_type=3,4`,   // single-family + townhouse only
+    `&property_type=3,4`,
     `&region_id=${regionId}&region_type=${regionType}`,
-    `&sf=1,2,3,5,6,7&status=9`,  // for_rent active
+    `&sf=1,2,3,5,6,7&status=9`,
     `&uipt=1,2&v=8`
   ].join('');
 
@@ -128,7 +144,7 @@ async function fetchRedfinRentals(city, state, maxResults = 50) {
 
 // ── Map Redfin row → Supabase property ───────────────────────────────────────
 
-const LANDLORD_ID = '53c17b61-2deb-4ab4-bed5-31ad4da85d39'; // existing landlord in DB
+const LANDLORD_ID = '53c17b61-2deb-4ab4-bed5-31ad4da85d39';
 
 function mapRow(row, city, state) {
   const price = parseInt((row.price || '').replace(/[^0-9]/g, '')) || 0;
@@ -150,14 +166,13 @@ function mapRow(row, city, state) {
   const lat = parseFloat(row.latitude) || null;
   const lng = parseFloat(row.longitude) || null;
 
-  const mls = row.mls || row.listing_id || row.redfin_estimate || '';
-  const id  = require('crypto').createHash('md5').update(addr + zip).digest('hex');
+  const id = require('crypto').createHash('md5').update(addr + zip).digest('hex');
 
-  // Build photo array from Redfin listing photo URL if available
-  const photos = [];
+  // Build raw Redfin photo URL — will be replaced with ImageKit URL before insert
+  const rawPhotos = [];
   const url = row.url || '';
   if (url) {
-    photos.push('https://www.redfin.com' + url.replace('/home/', '/photo/') + '/0.jpg');
+    rawPhotos.push('https://www.redfin.com' + url.replace('/home/', '/photo/') + '/0.jpg');
   }
 
   return {
@@ -177,7 +192,8 @@ function mapRow(row, city, state) {
     square_footage:    sqft,
     monthly_rent:      price,
     security_deposit:  price,
-    photo_urls:        photos.length ? photos : null,
+    photo_urls:        null,      // filled in after ImageKit upload below
+    _raw_photos:       rawPhotos, // temp field — stripped before DB insert
     pets_allowed:      false,
     smoking_allowed:   false,
     available_date:    new Date().toISOString().split('T')[0],
@@ -190,44 +206,34 @@ function mapRow(row, city, state) {
 // ── Target markets ────────────────────────────────────────────────────────────
 
 const MARKETS = [
-  // Texas
-  { city: 'Houston',      state: 'TX' },
-  { city: 'Austin',       state: 'TX' },
-  { city: 'San Antonio',  state: 'TX' },
-  { city: 'Dallas',       state: 'TX' },
-  { city: 'Fort Worth',   state: 'TX' },
-  // Georgia
-  { city: 'Atlanta',      state: 'GA' },
-  { city: 'Marietta',     state: 'GA' },
-  { city: 'Douglasville', state: 'GA' },
-  // North Carolina
-  { city: 'Charlotte',    state: 'NC' },
-  { city: 'Raleigh',      state: 'NC' },
-  { city: 'Durham',       state: 'NC' },
-  // Tennessee
-  { city: 'Nashville',    state: 'TN' },
-  { city: 'Memphis',      state: 'TN' },
-  { city: 'Knoxville',    state: 'TN' },
-  // Missouri
-  { city: 'St. Louis',    state: 'MO' },
-  { city: 'Kansas City',  state: 'MO' },
-  // New Mexico
-  { city: 'Albuquerque',  state: 'NM' },
-  { city: 'Santa Fe',     state: 'NM' },
-  // Arizona
-  { city: 'Phoenix',      state: 'AZ' },
-  { city: 'Tucson',       state: 'AZ' },
-  // Colorado
-  { city: 'Denver',       state: 'CO' },
-  { city: 'Colorado Springs', state: 'CO' },
-  // Florida
-  { city: 'Tampa',        state: 'FL' },
-  { city: 'Orlando',      state: 'FL' },
-  { city: 'Jacksonville', state: 'FL' },
-  // Ohio
-  { city: 'Columbus',     state: 'OH' },
-  { city: 'Cleveland',    state: 'OH' },
-  { city: 'Cincinnati',   state: 'OH' },
+  { city: 'Houston',           state: 'TX' },
+  { city: 'Austin',            state: 'TX' },
+  { city: 'San Antonio',       state: 'TX' },
+  { city: 'Dallas',            state: 'TX' },
+  { city: 'Fort Worth',        state: 'TX' },
+  { city: 'Atlanta',           state: 'GA' },
+  { city: 'Marietta',          state: 'GA' },
+  { city: 'Douglasville',      state: 'GA' },
+  { city: 'Charlotte',         state: 'NC' },
+  { city: 'Raleigh',           state: 'NC' },
+  { city: 'Durham',            state: 'NC' },
+  { city: 'Nashville',         state: 'TN' },
+  { city: 'Memphis',           state: 'TN' },
+  { city: 'Knoxville',         state: 'TN' },
+  { city: 'St. Louis',         state: 'MO' },
+  { city: 'Kansas City',       state: 'MO' },
+  { city: 'Albuquerque',       state: 'NM' },
+  { city: 'Santa Fe',          state: 'NM' },
+  { city: 'Phoenix',           state: 'AZ' },
+  { city: 'Tucson',            state: 'AZ' },
+  { city: 'Denver',            state: 'CO' },
+  { city: 'Colorado Springs',  state: 'CO' },
+  { city: 'Tampa',             state: 'FL' },
+  { city: 'Orlando',           state: 'FL' },
+  { city: 'Jacksonville',      state: 'FL' },
+  { city: 'Columbus',          state: 'OH' },
+  { city: 'Cleveland',         state: 'OH' },
+  { city: 'Cincinnati',        state: 'OH' },
 ];
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -236,18 +242,20 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function main() {
   console.log('=== Choice Properties — Redfin Rental Fetcher ===\n');
-  let totalInserted = 0;
+  console.log(canUseImageKit()
+    ? '✓ ImageKit configured — photos will be uploaded to your CDN\n'
+    : '⚠  ImageKit not configured — properties will be inserted without photos\n'
+  );
+
   let allProperties = [];
 
   for (const { city, state } of MARKETS) {
     console.log(`\n[ ${city}, ${state} ]`);
     const rows = await fetchRedfinRentals(city, state, 30);
-
     const mapped = rows.map(r => mapRow(r, city, state)).filter(Boolean);
     console.log(`  Mapped ${mapped.length} valid properties`);
     allProperties.push(...mapped);
-
-    await sleep(1500); // be polite to Redfin
+    await sleep(1500);
   }
 
   // Deduplicate by id
@@ -258,23 +266,43 @@ async function main() {
     return true;
   });
 
-  console.log(`\n=== Total unique properties to insert: ${unique.length} ===`);
+  console.log(`\n=== Total unique properties: ${unique.length} ===`);
 
   if (unique.length === 0) {
     console.log('Nothing to insert — Redfin may be blocking. Try running again or check the CSV endpoint.');
     return;
   }
 
+  // ── Upload photos to ImageKit ─────────────────────────────────────────────
+  if (canUseImageKit()) {
+    console.log('\n=== Uploading photos to ImageKit ===');
+    for (const prop of unique) {
+      if (prop._raw_photos && prop._raw_photos.length > 0) {
+        process.stdout.write(`  ${prop.id.slice(0, 8)} (${prop.city}): `);
+        const ikUrls = await uploadPhotosToImageKit(prop._raw_photos, prop.id);
+        prop.photo_urls = ikUrls.length > 0 ? ikUrls : null;
+        process.stdout.write('\n');
+        await sleep(300); // be polite to ImageKit
+      }
+    }
+    console.log('✓ Photo upload complete');
+  }
+
+  // Strip temp field before DB insert
+  const toInsert = unique.map(({ _raw_photos, ...rest }) => rest);
+
   // Insert in batches of 50
+  console.log('\n=== Inserting into Supabase ===');
+  let totalInserted = 0;
   const BATCH = 50;
-  for (let i = 0; i < unique.length; i += BATCH) {
-    const batch = unique.slice(i, i + BATCH);
+  for (let i = 0; i < toInsert.length; i += BATCH) {
+    const batch = toInsert.slice(i, i + BATCH);
     const res = await supabasePost('/rest/v1/properties?on_conflict=id', batch);
     if (res.status >= 200 && res.status < 300) {
       totalInserted += batch.length;
-      console.log(`  Inserted batch ${Math.ceil(i/BATCH)+1}: ${batch.length} rows (status ${res.status})`);
+      console.log(`  Inserted batch ${Math.ceil(i / BATCH) + 1}: ${batch.length} rows (status ${res.status})`);
     } else {
-      console.log(`  Batch ${Math.ceil(i/BATCH)+1} FAILED (status ${res.status}):`, JSON.stringify(res.body).slice(0, 300));
+      console.log(`  Batch ${Math.ceil(i / BATCH) + 1} FAILED (status ${res.status}):`, JSON.stringify(res.body).slice(0, 300));
     }
   }
 
