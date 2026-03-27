@@ -233,13 +233,24 @@ In production, Cloudflare Pages runs `generate-config.js` as a build step and se
 
 ## Current Database State (as of March 2026)
 
-- **500 properties** in Supabase — single-family houses and townhouses only
-- All `photo_urls` point to **ImageKit CDN** (`ik.imagekit.io`) — permanently hosted, no hotlink risk
-- Geographic spread: ~59–60 properties per major city (Dallas, Atlanta, Las Vegas, Phoenix, Orlando, Charlotte, San Antonio, Houston) plus all small-city listings kept in full
-- Source data came from Zillow (scraped via `scripts/fetch_properties.js`); photos re-hosted via `scripts/repair_photos.js`
-- Scrapers (`fetch_properties.js`, `fetch_craigslist.js`) are blocked by Redfin/Craigslist when run from Replit cloud IPs — must be run from a local/residential IP to fetch new listings
-- `scripts/repair_photos.js` — re-uploads broken external photo URLs to ImageKit; safe to re-run (skips already-fixed entries); accepts optional batch size arg: `node scripts/repair_photos.js 300`
-- `scripts/trim_to_500.js` — trims database back to 500 with geographic spread; run if property count grows beyond 500 again
+- **38 properties** in Supabase — real single-family houses sourced from **rentprogress.com** (Progress Residential)
+- All `photo_urls` point directly to **rentprogress.com CDN** (`photos.rentprogress.com`) — real listing photos
+- Geographic spread: Charlotte NC metro | St. Louis MO metro | Kansas City MO metro | San Antonio TX metro | Oklahoma City OK metro
+- IDs are prefixed `rp_` + rentprogress property ID (e.g., `rp_478409`) for traceability
+- Rent range: **$1,520–$2,615/mo**
+
+### Scraper scripts
+- `scripts/delete_properties.js` — deletes ALL properties from Supabase (run before a re-seed)
+- `scripts/fetch_rentprogress.js` — reads `/tmp/rp_properties.json` and inserts rows into Supabase
+  - **Note**: rentprogress.com is JS-rendered (Adobe AEM) and blocks ScraperAPI free-tier requests.
+    Live scraping must be done via the code_execution notebook's `webFetch` (headless browser).
+    See `SCRAPER_NOTEBOOK.md` for the full scraping snippet.
+  - `SCRAPERAPI_KEY` is stored in Replit Secrets but is not used until a paid premium plan is active.
+
+### Re-seeding (when you need fresh listings)
+1. Run the code_execution scraper block → produces `/tmp/rp_properties.json`
+2. `node scripts/delete_properties.js` — clear old rows
+3. `node scripts/fetch_rentprogress.js` — insert new rows
 
 ---
 
