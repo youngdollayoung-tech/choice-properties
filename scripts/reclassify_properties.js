@@ -33,26 +33,27 @@ function supabaseGet(path) {
   });
 }
 
-function supabaseUpsert(rows) {
+function supabasePatch(id, fields) {
   return new Promise((resolve, reject) => {
-    const payload = JSON.stringify(rows);
-    const parsed  = new URL(SUPABASE_URL + '/rest/v1/properties?on_conflict=id');
+    const payload = JSON.stringify(fields);
+    const encodedId = encodeURIComponent(id);
+    const parsed  = new URL(SUPABASE_URL + `/rest/v1/properties?id=eq.${encodedId}`);
     const opts = {
-      method: 'POST',
+      method: 'PATCH',
       hostname: parsed.hostname,
       path: parsed.pathname + parsed.search,
       headers: {
         'apikey': SERVICE_KEY,
         'Authorization': 'Bearer ' + SERVICE_KEY,
         'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates,return=minimal',
+        'Prefer': 'return=minimal',
         'Content-Length': Buffer.byteLength(payload)
       }
     };
     let raw = '';
     const req = https.request(opts, r => {
       r.on('data', c => raw += c);
-      r.on('end', () => resolve({ status: r.statusCode, body: raw || null }));
+      r.on('end', () => resolve({ status: r.statusCode, body: raw || null, id }));
     });
     req.on('error', reject);
     req.write(payload);
@@ -236,12 +237,13 @@ function reclassify(prop) {
       ]);
 
   // Lease terms
-  const lease_terms = pickWeighted(id + 'lease', [
+  const leaseTermRaw = pickWeighted(id + 'lease', [
     { value: '12 months',      weight: 0.60 },
     { value: '6-12 months',    weight: 0.20 },
     { value: 'Month-to-month', weight: 0.10 },
     { value: '24 months',      weight: 0.10 }
   ]);
+  const lease_terms = [leaseTermRaw];
 
   const title = buildTitle(id, bedrooms, bathrooms, property_type, prop.city, prop.state);
 
@@ -259,13 +261,13 @@ function reclassify(prop) {
     pets_allowed,
     amenities,
     appliances: baseAppliances,
-    flooring,
+    flooring: [flooring],
     heating_type,
     cooling_type,
     laundry_type,
     parking,
     lease_terms,
-    minimum_lease_months: lease_terms === 'Month-to-month' ? 1 : lease_terms === '6-12 months' ? 6 : 12,
+    minimum_lease_months: leaseTermRaw === 'Month-to-month' ? 1 : leaseTermRaw === '6-12 months' ? 6 : 12,
     title,
     updated_at: new Date().toISOString()
   };
@@ -296,19 +298,21 @@ async function main() {
   console.log('  Beds:', JSON.stringify(bedCounts));
   console.log();
 
-  // Upsert in batches of 100
-  const BATCH = 100;
-  let done = 0;
-  for (let i = 0; i < updated.length; i += BATCH) {
-    const batch = updated.slice(i, i + BATCH);
-    const res   = await supabaseUpsert(batch);
-    if (res.status >= 200 && res.status < 300) {
-      done += batch.length;
-      process.stdout.write(`\r  Updated: ${done}/${updated.length}`);
-    } else {
-      console.log(`\n  Batch failed (${res.status}): ${(res.body || '').slice(0, 300)}`);
-      return;
+  // PATCH in parallel batches of 20
+  const CONCURRENCY = 20;
+  let done = 0, failed = 0;
+  for (let i = 0; i < updated.length; i += CONCURRENCY) {
+    const batch   = updated.slice(i, i + CONCURRENCY);
+    const results = await Promise.all(batch.map(p => supabasePatch(p.id, p)));
+    for (const res of results) {
+      if (res.status >= 200 && res.status < 300) {
+        done++;
+      } else {
+        failed++;
+        if (failed <= 3) console.log(`\n  PATCH failed (${res.status}) for ${res.id}: ${(res.body || '').slice(0, 200)}`);
+      }
     }
+    process.stdout.write(`\r  Updated: ${done} | Failed: ${failed} / ${updated.length}`);
   }
 
   console.log(`\n\n✓ Done — reclassified ${done} properties as houses and townhouses`);
