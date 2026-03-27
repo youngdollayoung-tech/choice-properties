@@ -34,9 +34,10 @@ function canUseImageKit() {
  * Follows up to 3 redirects.
  */
 function downloadBuffer(url, redirects = 3) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const lib    = url.startsWith('https') ? https : http;
-    const parsed = new URL(url);
+    let parsed;
+    try { parsed = new URL(url); } catch (_) { return resolve(null); }
     const opts   = {
       hostname: parsed.hostname,
       path:     parsed.pathname + parsed.search,
@@ -46,18 +47,25 @@ function downloadBuffer(url, redirects = 3) {
         'Referer':    parsed.origin + '/',
       },
     };
-    lib.get(opts, (res) => {
+    let resolved = false;
+    const done = (val) => { if (!resolved) { resolved = true; resolve(val); } };
+
+    const req = lib.get(opts, (res) => {
       if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location && redirects > 0) {
-        return resolve(downloadBuffer(res.headers.location, redirects - 1));
+        res.resume();
+        return downloadBuffer(res.headers.location, redirects - 1).then(done);
       }
       if (res.statusCode !== 200) {
         res.resume();
-        return resolve(null); // non-fatal — caller treats null as skip
+        return done(null);
       }
       const chunks = [];
       res.on('data', c => chunks.push(c));
-      res.on('end', () => resolve(Buffer.concat(chunks)));
-    }).on('error', () => resolve(null));
+      res.on('end', () => done(Buffer.concat(chunks)));
+      res.on('error', () => done(null));
+    });
+    req.on('error', () => done(null));
+    req.setTimeout(10000, () => { req.destroy(); done(null); });
   });
 }
 
@@ -73,24 +81,13 @@ async function uploadPhotoToImageKit(sourceUrl, fileName, folder = '/properties/
   if (!canUseImageKit()) return null;
   if (!sourceUrl) return null;
 
-  // ── Step 1: Download the image as raw bytes ──────────────────────────────
-  const imgBuffer = await downloadBuffer(sourceUrl);
-  if (!imgBuffer || imgBuffer.length < 1000) {
-    // Less than 1 KB almost certainly means a redirect page or error, not an image
-    return null;
-  }
-
-  // ── Step 2: Base64-encode for ImageKit upload API ────────────────────────
-  const base64 = imgBuffer.toString('base64');
-  const ext     = (fileName.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
-  const mime    = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
-  const dataUri = `data:${mime};base64,${base64}`;
-
-  // ── Step 3: POST to ImageKit Upload API ──────────────────────────────────
+  // ── POST to ImageKit Upload API with URL as `file` ───────────────────────
+  // ImageKit fetches the image server-side — no local download needed,
+  // no IP-blocking issues from Zillow/Redfin.
   const authHeader = 'Basic ' + Buffer.from(IMAGEKIT_PRIVATE_KEY + ':').toString('base64');
 
   const body = new URLSearchParams();
-  body.append('file',            dataUri);
+  body.append('file',            sourceUrl);   // pass URL directly
   body.append('fileName',        fileName);
   body.append('folder',          folder);
   body.append('useUniqueFileName', 'true');
@@ -127,6 +124,7 @@ async function uploadPhotoToImageKit(sourceUrl, fileName, folder = '/properties/
       });
     });
     req.on('error', () => resolve(null));
+    req.setTimeout(20000, () => { req.destroy(); resolve(null); });
     req.write(bodyStr);
     req.end();
   });
