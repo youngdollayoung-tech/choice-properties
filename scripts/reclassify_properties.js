@@ -278,10 +278,20 @@ function reclassify(prop) {
 async function main() {
   console.log('=== Choice Properties — Property Reclassifier ===\n');
 
-  // Fetch all active properties
+  // Fetch all active properties with pagination
   console.log('Fetching existing properties...');
-  const props = await supabaseGet('/rest/v1/properties?status=eq.active&select=id,city,state&limit=2000');
-  if (!Array.isArray(props)) { console.log('Error fetching:', JSON.stringify(props)); return; }
+  let props = [], offset = 0;
+  const PAGE = 1000;
+  while (true) {
+    const page = await supabaseGet(
+      `/rest/v1/properties?status=eq.active&select=id,city,state&limit=${PAGE}&offset=${offset}`
+    );
+    if (!Array.isArray(page)) { console.log('Error fetching page:', JSON.stringify(page)); break; }
+    props.push(...page);
+    if (page.length < PAGE) break;
+    offset += PAGE;
+  }
+  if (!props.length) { console.log('No properties found.'); return; }
   console.log(`Fetched ${props.length} properties\n`);
 
   // Reclassify each

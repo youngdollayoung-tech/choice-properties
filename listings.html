@@ -472,17 +472,23 @@ const savedIds     = new Set(JSON.parse(localStorage.getItem('cp_saved') || '[]'
   if (urlParams.get('maxrent')) { activeMaxRent = urlParams.get('maxrent'); document.getElementById('maxRentFilter').value = activeMaxRent; }
 
   try {
-    const { data, error } = await supabase
-      .from('properties')
-      .select('*, landlords(contact_name, business_name, avatar_url, verified)')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false });
+    const [{ data, error }, { count }] = await Promise.all([
+      supabase
+        .from('properties')
+        .select('*, landlords(contact_name, business_name, avatar_url, verified)')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active')
+    ]);
 
     if (error) throw error;
     allProperties = data || [];
 
     const counter = document.getElementById('statListings');
-    if (counter) counter.textContent = allProperties.length;
+    if (counter) counter.textContent = (count ?? allProperties.length).toLocaleString();
 
     renderProperties(applyFilters(allProperties));
     setupFilters();
