@@ -64,7 +64,8 @@ CONFIG.img = function(url, preset) {
     const clean = url.replace(/\\/tr:[^/]+/, '');
     return clean.replace(CONFIG.IMAGEKIT_URL, CONFIG.IMAGEKIT_URL + '/' + tr);
   }
-  return CONFIG.IMAGEKIT_URL + '/' + tr + '/' + encodeURIComponent(url);
+  // External URLs (Zillow, S3, etc.) — serve directly, ImageKit can't proxy them
+  return url;
 };
 
 Object.freeze(CONFIG.FEATURES);
