@@ -88,7 +88,8 @@ CONFIG.img = function(url, preset) {
     const clean = url.replace(/\/tr:[^/]+/, '');
     return clean.replace(CONFIG.IMAGEKIT_URL, `${CONFIG.IMAGEKIT_URL}/${tr}`);
   }
-  return `${CONFIG.IMAGEKIT_URL}/${tr}/${encodeURIComponent(url)}`;
+  // External URLs (Zillow CDN, S3, etc.) — serve directly, never proxy through ImageKit
+  return url;
 };
 
 Object.freeze(CONFIG);
