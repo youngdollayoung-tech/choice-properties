@@ -29,145 +29,6 @@
 
 ---
 
-# ══════════════════════════════════════════════════════════
-# DATABASE DATA SOURCE — AI AGENTS MUST READ THIS COMPLETELY
-# ══════════════════════════════════════════════════════════
-#
-# IF YOU ARE AN AI AGENT AND YOUR TASK INVOLVES ANYTHING RELATED TO:
-#   — Property listings, the properties table, or property data
-#   — Scrapers, seeding, or adding/replacing listings
-#   — Photos, photo_urls, or image sources
-#   — The scripts/ folder
-#
-# THEN YOU MUST READ AND UNDERSTAND THIS ENTIRE SECTION
-# BEFORE TAKING ANY ACTION. DO NOT SKIP IT. DO NOT ASSUME.
-# ══════════════════════════════════════════════════════════
-
-## ⚠️ PROPERTY DATA — WHAT WAS DONE AND WHY (MARCH 2026)
-
-### The old scrapers are dead. Do not use them.
-
-This project previously had scrapers targeting **Redfin** and **Craigslist**. Those scrapers
-(`scripts/fetch_properties.js`, `scripts/fetch_craigslist.js`, `scripts/reclassify_properties.js`)
-are **abandoned and must never be run again** for the following confirmed reasons:
-
-- `fetch_properties.js` — Used Redfin's undocumented internal API. Fragile, breaks without notice,
-  blocked by Redfin when run from cloud IPs (including Replit).
-- `fetch_craigslist.js` — Used regex to extract addresses from Craigslist HTML. Missed ~80% of
-  addresses. Photos expire within days (Craigslist hotlink protection). Produces unusable data.
-- `reclassify_properties.js` — **Generates entirely fake property data.** Do not run this. Ever.
-  It was used as a patch when real scrapers failed. All fake data has been deleted.
-
-These files are kept in `scripts/` for historical reference only. **They are not part of the
-current data pipeline and must not be executed.**
-
----
-
-### The new data source is rentprogress.com
-
-As of March 2026, all property listings in Supabase come exclusively from
-**rentprogress.com** (Progress Residential), a legitimate national single-family rental
-operator. This was a deliberate, intentional migration.
-
-**Why rentprogress.com?**
-- Covers all 5 target markets: Charlotte NC, St. Louis MO, Kansas City MO, San Antonio TX,
-  Oklahoma City OK
-- Real, currently available listings with real prices, real photos, real addresses
-- Stable photo CDN (`photos.rentprogress.com`) — photos do not expire
-- Consistent data structure across all markets
-
----
-
-### What is currently in the Supabase properties table
-
-| Field | Value |
-|-------|-------|
-| Total rows | 38 active properties |
-| Status | All `status = 'active'` |
-| ID format | `rp_` + rentprogress property ID (e.g., `rp_478409`) |
-| Landlord | All assigned to landlord_id `53c17b61-2deb-4ab4-bed5-31ad4da85d39` |
-| Photo source | `photos.rentprogress.com` CDN — direct URLs, no ImageKit re-hosting |
-| Rent range | $1,520 – $2,615/month |
-| Property types | Single-family houses and townhouses only |
-
-**Market breakdown:**
-- Charlotte, NC metro (includes Mooresville, Concord, Monroe, Dallas NC): 10 listings
-- St. Louis, MO metro (includes Florissant, Overland): 5 listings
-- Kansas City, MO metro (includes Raymore, Blue Springs, Grandview, Belton): 5 listings
-- San Antonio, TX metro (includes Converse): 10 listings
-- Oklahoma City, OK metro (includes Yukon, Moore, Midwest City): 8 listings
-
----
-
-### The scraper architecture — how this data was collected
-
-rentprogress.com is built on **Adobe AEM**, a JavaScript-rendered CMS. It requires a
-headless browser to load listing data. This creates a critical constraint:
-
-**ScraperAPI DOES NOT WORK for this domain on the free tier.**
-
-ScraperAPI's free-tier returns HTTP 500 with the message:
-> "Protected domains may require adding premium=true OR ultra_premium=true"
-
-Attempting to use `render=true`, `premium=true`, or `ultra_premium=true` with a free
-ScraperAPI account all fail with HTTP 403 or 500. The `SCRAPERAPI_KEY` secret is stored
-in Replit Secrets and IS valid — the limitation is the account plan, not the key itself.
-
-**The actual scraping was done using the Replit code_execution notebook's `webFetch`
-function**, which uses an internal headless browser that can render JavaScript pages.
-No standalone Node.js script can replicate this without Playwright/Puppeteer, and those
-are not installed in this environment (no Chromium available in the container).
-
-**The two scraper scripts and their roles:**
-
-| Script | What it does |
-|--------|-------------|
-| `scripts/delete_properties.js` | Deletes ALL rows from the Supabase properties table. Run before re-seeding. |
-| `scripts/fetch_rentprogress.js` | Reads a pre-generated `/tmp/rp_properties.json` file and inserts/upserts rows into Supabase. Does NOT do any scraping itself. |
-
-The scraping (web fetching) must be done separately in the code_execution notebook.
-**See `SCRAPER_NOTEBOOK.md` for the exact code blocks to run.**
-
----
-
-### How to re-seed the database (the correct process)
-
-If you need to refresh listings from rentprogress.com, follow these steps **exactly**:
-
-1. **Run Block A** (URL collection) in a code_execution notebook — see `SCRAPER_NOTEBOOK.md`
-2. **Run Block B** (detail page fetch + JSON write) in code_execution — see `SCRAPER_NOTEBOOK.md`
-   - This writes `/tmp/rp_properties.json`
-3. **From the bash shell**, run:
-   ```
-   node scripts/delete_properties.js
-   node scripts/fetch_rentprogress.js
-   ```
-4. Verify with:
-   ```
-   node -e "const h=require('https'),u=new URL(process.env.SUPABASE_URL+'/rest/v1/properties?select=id,city&limit=100');let r='';h.get({hostname:u.hostname,path:u.pathname+u.search,headers:{apikey:process.env.SUPABASE_SERVICE_KEY,Authorization:'Bearer '+process.env.SUPABASE_SERVICE_KEY}},res=>{res.on('data',c=>r+=c);res.on('end',()=>{const j=JSON.parse(r);console.log('count:',j.length);})}).on('error',console.error);"
-   ```
-
-**Do NOT:**
-- Run `scripts/fetch_properties.js` (Redfin scraper — broken and wrong source)
-- Run `scripts/fetch_craigslist.js` (Craigslist scraper — broken and wrong source)
-- Run `scripts/reclassify_properties.js` (fake data generator — never use)
-- Use `DATABASE_URL`, `PGHOST`, or any local DB variable — Supabase cloud only
-- Try to call ScraperAPI for rentprogress.com without a premium plan — it will fail
-- Delete properties without running the full re-seed process immediately after
-
----
-
-### Content Security Policy note
-
-`photos.rentprogress.com` has been added to the `img-src` directive in:
-- `serve.js` — for local development preview
-- `_headers` — for Cloudflare Pages production deployment
-
-If photos stop loading, check that these two files still include `https://photos.rentprogress.com`
-in their CSP `img-src` directive. Do not remove it.
-
----
-
 ## ⛔ MANDATORY RULES FOR ALL AI AGENTS — READ BEFORE ANYTHING ELSE
 
 These rules are absolute. They apply to every session, every import, every task. No exceptions.
@@ -370,26 +231,12 @@ In production, Cloudflare Pages runs `generate-config.js` as a build step and se
 
 ---
 
-## Current Database State (as of March 2026)
+## Current Database State
 
-- **38 properties** in Supabase — real single-family houses sourced from **rentprogress.com** (Progress Residential)
-- All `photo_urls` point directly to **rentprogress.com CDN** (`photos.rentprogress.com`) — real listing photos
-- Geographic spread: Charlotte NC metro | St. Louis MO metro | Kansas City MO metro | San Antonio TX metro | Oklahoma City OK metro
-- IDs are prefixed `rp_` + rentprogress property ID (e.g., `rp_478409`) for traceability
-- Rent range: **$1,520–$2,615/mo**
-
-### Scraper scripts
-- `scripts/delete_properties.js` — deletes ALL properties from Supabase (run before a re-seed)
-- `scripts/fetch_rentprogress.js` — reads `/tmp/rp_properties.json` and inserts rows into Supabase
-  - **Note**: rentprogress.com is JS-rendered (Adobe AEM) and blocks ScraperAPI free-tier requests.
-    Live scraping must be done via the code_execution notebook's `webFetch` (headless browser).
-    See `SCRAPER_NOTEBOOK.md` for the full scraping snippet.
-  - `SCRAPERAPI_KEY` is stored in Replit Secrets but is not used until a paid premium plan is active.
-
-### Re-seeding (when you need fresh listings)
-1. Run the code_execution scraper block → produces `/tmp/rp_properties.json`
-2. `node scripts/delete_properties.js` — clear old rows
-3. `node scripts/fetch_rentprogress.js` — insert new rows
+- The **properties table is empty** — no listings are currently seeded
+- Add listings through the landlord portal: a registered landlord logs in at `/landlord/login.html` and posts properties via `/landlord/new-listing.html`
+- Property photos are uploaded to **ImageKit** via the landlord portal form
+- Property IDs are auto-generated server-side in `PROP-XXXXXXXX` format
 
 ---
 
@@ -408,20 +255,11 @@ In production, Cloudflare Pages runs `generate-config.js` as a build step and se
 | `js/imagekit.js` | ImageKit upload helper |
 | `supabase/functions/` | Edge Function source (deployed to Supabase cloud, version-controlled here) |
 
-### Property Data Scripts (active — March 2026)
+### Utility Scripts
 | File | Purpose |
 |------|---------|
-| `SCRAPER_NOTEBOOK.md` | **Start here for re-seeding** — full code_execution scraper blocks for rentprogress.com |
-| `scripts/delete_properties.js` | Deletes ALL rows from Supabase properties table. Run before re-seeding. |
-| `scripts/fetch_rentprogress.js` | Reads `/tmp/rp_properties.json` and upserts into Supabase. Run after scraper notebook. |
-| `scripts/imagekit-helper.js` | ImageKit upload utility — reusable, currently not called (no ImageKit key in env) |
-
-### Dead Scripts — DO NOT RUN
-| File | Why it is dead |
-|------|---------------|
-| `scripts/fetch_properties.js` | Redfin scraper — Redfin blocks cloud IPs, API undocumented and fragile |
-| `scripts/fetch_craigslist.js` | Craigslist scraper — addresses missed ~80%, photos expire in days |
-| `scripts/reclassify_properties.js` | **Generates fake data** — was a stopgap patch, all fake data deleted |
+| `scripts/check_db.js` | Inspect property/application counts in Supabase |
+| `scripts/check_landlords.js` | Inspect landlord records in Supabase |
 
 ### Legacy SQL Files (do not use for new projects)
 | File | Status |
