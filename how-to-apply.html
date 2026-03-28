@@ -23,6 +23,7 @@
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
   <link rel="stylesheet" href="/css/main.css?v=3">
   <link rel="stylesheet" href="/css/mobile.css?v=4">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   .info-page { padding: var(--space-16) 0 var(--space-24); }
   .info-hero { background: var(--color-dark-surface); padding: var(--space-16) 0 var(--space-12); margin-bottom: var(--space-12); position: relative; overflow: hidden; }
@@ -101,7 +102,7 @@
     <a href="/faq.html" class="nav-drawer-link"><i class="fas fa-life-ring"></i> FAQ</a>
     <a href="/apply/dashboard.html" target="_blank" class="nav-drawer-link"><i class="fas fa-file-alt"></i> Track My Application</a>
     <div class="nav-drawer-divider"></div>
-    <a href="/how-it-works.html" class="nav-drawer-link"><i class="fas fa-building"></i> For Landlords</a>
+    <a href="/landlord/login.html" class="nav-drawer-link"><i class="fas fa-building"></i> For Landlords</a>
     <a href="/about.html" class="nav-drawer-link"><i class="fas fa-info-circle"></i> About Us</a>
   </div>
   <div class="nav-drawer-cta">
@@ -275,6 +276,10 @@
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initContacts);
   else initContacts();
 })();
+</script>
+<script type="module">
+  import { updateNav } from '/js/cp-api.js';
+  updateNav();
 </script>
 </body>
 </html>

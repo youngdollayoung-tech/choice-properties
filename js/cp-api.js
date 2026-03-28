@@ -99,6 +99,11 @@ async function callEdgeFunction(name, payload) {
     },
     body: JSON.stringify(payload),
   });
+  if (!res.ok) {
+    let detail = '';
+    try { const j = await res.json(); detail = j.error || j.message || JSON.stringify(j); } catch (_) {}
+    throw new Error(`Edge function "${name}" failed (${res.status}): ${detail || res.statusText}`);
+  }
   return res.json();
 }
 
@@ -420,9 +425,14 @@ export async function signOut() {
 }
 export async function resetPassword(email)  { const { error } = await CP.sb().auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/landlord/login.html` }); if (error) throw error; }
 export async function updateNav()           {
-  const session = await CP.Auth.getSession();
-  const authLink = document.getElementById('navAuthLink');
-  if (!authLink) return;
-  if (session) { authLink.href = '/landlord/dashboard.html'; authLink.textContent = 'My Dashboard'; }
-  else         { authLink.href = '/landlord/login.html';     authLink.textContent = 'List Your Property'; }
+  const session    = await CP.Auth.getSession();
+  const authLink   = document.getElementById('navAuthLink');
+  const drawerLink = document.getElementById('drawerAuthLink');
+  if (session) {
+    if (authLink)   { authLink.href   = '/landlord/dashboard.html'; authLink.textContent   = 'My Dashboard'; }
+    if (drawerLink) { drawerLink.href = '/landlord/dashboard.html'; drawerLink.textContent = 'My Dashboard'; }
+  } else {
+    if (authLink)   { authLink.href   = '/landlord/login.html'; authLink.textContent   = 'List Your Property'; }
+    if (drawerLink) { drawerLink.href = '/landlord/login.html'; drawerLink.textContent = 'Landlord Login'; }
+  }
 }
