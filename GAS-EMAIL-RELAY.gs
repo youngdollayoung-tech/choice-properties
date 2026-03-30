@@ -1,6 +1,6 @@
 // ============================================================
 // CHOICE PROPERTIES — GAS EMAIL RELAY — Bilingual EN/ES
-// ============================================================
+// =============================================================
 // Full EN/ES bilingual support for all applicant-facing emails.
 // Admin/landlord emails remain English (internal use).
 //
