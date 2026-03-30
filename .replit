@@ -40,3 +40,12 @@ externalPort = 80
 [userenv.shared]
 SUPABASE_URL = "https://khmsrguicocpriogqahr.supabase.co"
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtobXNyZ3VpY29jcHJpb2dxYWhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NjE0OTYsImV4cCI6MjA5MDQzNzQ5Nn0.Hvu0wiPvpT2Jfjcq-RmSskLT1H2S3tnucgVMh8Uu_IA"
+IMAGEKIT_URL = "https://ik.imagekit.io/21rg7lvzo"
+IMAGEKIT_PUBLIC_KEY = "public_gKSXcziLMFJO387FJXBa7kTvVA0="
+GEOAPIFY_API_KEY = "bea2afb13c904abea5cb2c2693541dcf"
+COMPANY_NAME = "Choice Properties"
+COMPANY_EMAIL = "choicepropertygroup@hotmail.com"
+COMPANY_PHONE = ""
+COMPANY_TAGLINE = "Your trust is our standard."
+COMPANY_ADDRESS = ""
+ADMIN_EMAILS = "Choiceproperties404@gmail.com"
